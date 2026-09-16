@@ -1,0 +1,21 @@
+{
+  "app": {
+    "name": "chat-app",
+    "host": "0.0.0.0",
+    "port": 3000
+  },
+  "database": {
+    "driver": "mysql",
+    "host": "127.0.0.1",
+    "port": 3306,
+    "user": "root",
+    "password": "181205",
+    "name": "chatgo",
+    "charset": "utf8mb4",
+    "parse_time": true
+  },
+  "migration": {
+    "enabled": true,
+    "path": "./migrations"
+  }
+}
