@@ -13,5 +13,5 @@ func RouteAuth(app fiber.Router, state *app.State, logger *slog.Logger) {
 	handler := NewHandler(service, logger)
 
 	auth := app.Group("/auth")
-	auth.Get("/", handler.HandleAuth)
+	auth.Post("/register", handler.Register)
 }

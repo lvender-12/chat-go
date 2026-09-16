@@ -6,12 +6,16 @@ import (
 	"chat-go/internal/database"
 	"chat-go/internal/router"
 	"log/slog"
+	"os"
 
+	"github.com/gofiber/contrib/v3/swaggerui"
 	"github.com/gofiber/fiber/v3"
 )
 
 func main() {
-	logger := slog.Default()
+	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+		Level: slog.LevelDebug,
+	}))
 	Routeapp := fiber.New()
 
 	conf, err := config.LoadConfig("config/config.json")
@@ -39,6 +43,13 @@ func main() {
 		Config: conf,
 	}
 
+	Routeapp.Use(swaggerui.New(swaggerui.Config{
+		BasePath: "/",
+		FilePath: "./docs/swagger.json",
+		Path:     "docs",
+		Title:    "chat go API",
+		CacheAge: 0,
+	}))
 	router.SetupRouter(Routeapp, state, logger)
 
 	slog.Error("failed to start server", "error", Routeapp.Listen(":3000"))

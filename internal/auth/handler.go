@@ -18,6 +18,23 @@ func NewHandler(service *Service, logger *slog.Logger) *Handler {
 	}
 }
 
-func (h *Handler) HandleAuth(c fiber.Ctx) error {
+// Register
+// @Summary Register user
+// @Description Create a new user account
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param body body UserInput true "Register input"
+// @Success 200 {string} string
+// @Failure 400 {object} map[string]string
+// @Router /api/v1/auth/register [post]
+func (h *Handler) Register(c fiber.Ctx) error {
+	var input UserInput
+	if err := c.Bind().Body(&input); err != nil {
+		return err
+	}
+
+	c.Set("Content-Type", "application/json")
+	h.logger.Debug("User Input", "input", input)
 	return c.SendString("Auth handled successfully")
 }
