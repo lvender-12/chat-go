@@ -26,10 +26,12 @@ func main() {
 		panic(err)
 	}
 
-	err = database.MigrateDB(db, logger)
-	if err != nil {
-		slog.Error("failed to migrate db", "error", err)
-		panic(err)
+	if conf.Migration.Enabled {
+		err = database.MigrateDB(db, logger, conf.Migration.Path)
+		if err != nil {
+			slog.Error("failed to migrate db", "error", err)
+			panic(err)
+		}
 	}
 
 	state := &app.State{

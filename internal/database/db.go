@@ -19,14 +19,14 @@ func LoadDB(driver string, userdb string, password string, dbname string, logger
 	return db, nil
 }
 
-func MigrateDB(db *sql.DB, logger *slog.Logger) error {
+func MigrateDB(db *sql.DB, logger *slog.Logger, path string) error {
 	driver, err := mysql.WithInstance(db, &mysql.Config{})
 	if err != nil {
 		return err
 	}
 
 	m, err := migrate.NewWithDatabaseInstance(
-		"file://migrations",
+		"file://"+path,
 		"mysql",
 		driver,
 	)
