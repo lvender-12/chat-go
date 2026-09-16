@@ -1,0 +1,25 @@
+package router
+
+import (
+	"chat-go/internal/app"
+	"chat-go/internal/auth"
+	"log/slog"
+
+	"github.com/gofiber/fiber/v3"
+)
+
+func SetupRouter(fiberApp *fiber.App, state *app.State, logger *slog.Logger) {
+	api := fiberApp.Group("/api/v1")
+
+	api.Use(func(c fiber.Ctx) error {
+		logger.Info(
+			"request",
+			"method", c.Method(),
+			"path", c.Path(),
+		)
+
+		return c.Next()
+	})
+
+	auth.RouteAuth(api, state, logger)
+}
