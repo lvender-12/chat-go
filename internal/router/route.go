@@ -3,6 +3,7 @@ package router
 import (
 	"chat-go/internal/app"
 	"chat-go/internal/auth"
+	"chat-go/internal/users"
 	"log/slog"
 
 	"github.com/gofiber/fiber/v3"
@@ -22,4 +23,5 @@ func SetupRouter(fiberApp *fiber.App, state *app.State, logger *slog.Logger) {
 	})
 
 	auth.RouteAuth(api, state, logger)
+	users.RouteUsers(api, state, logger)
 }

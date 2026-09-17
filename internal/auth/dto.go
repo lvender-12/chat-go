@@ -22,3 +22,10 @@ type User struct {
 	PasswordSalt string `json:"-"`
 	DisplayName  string `json:"display_name"`
 }
+
+type Profile struct {
+	ID          uint64 `json:"id"`
+	Username    string `json:"username"`
+	Email       string `json:"email"`
+	DisplayName string `json:"display_name"`
+}

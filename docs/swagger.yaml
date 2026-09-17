@@ -17,6 +17,17 @@ definitions:
       username:
         type: string
     type: object
+  users.UserProfile:
+    properties:
+      display_name:
+        type: string
+      email:
+        type: string
+      id:
+        type: integer
+      username:
+        type: string
+    type: object
 info:
   contact: {}
 paths:
@@ -86,6 +97,37 @@ paths:
               type: string
             type: object
       summary: Register user
+      tags:
+      - Auth
+  /api/v1/users/profile:
+    get:
+      description: Get the profile of the currently authenticated user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/users.UserProfile'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: User not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get current user profile
       tags:
       - Auth
 swagger: "2.0"
