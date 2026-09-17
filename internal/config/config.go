@@ -8,6 +8,7 @@ import (
 type Config struct {
 	App       AppConfig       `json:"app"`
 	Database  DatabaseConfig  `json:"database"`
+	JWT       JWTConfig       `json:"jwt"`
 	Migration MigrationConfig `json:"migration"`
 }
 
@@ -26,6 +27,11 @@ type DatabaseConfig struct {
 	Name      string `json:"name"`
 	Charset   string `json:"charset"`
 	ParseTime bool   `json:"parse_time"`
+}
+
+type JWTConfig struct {
+	Secret string `json:"secret"`
+	Exp    int    `json:"exp"`
 }
 
 type MigrationConfig struct {

@@ -3,6 +3,7 @@ package utils
 import (
 	"crypto/rand"
 	"crypto/subtle"
+	"encoding/hex"
 
 	"golang.org/x/crypto/argon2"
 )
@@ -17,27 +18,55 @@ const (
 
 func generateSalt(length int) ([]byte, error) {
 	salt := make([]byte, length)
+
 	_, err := rand.Read(salt)
 	if err != nil {
 		return nil, err
 	}
+
 	return salt, nil
 }
 
-func HashingPassword(password string) ([]byte, error) {
+func HashingPassword(password string) (string, string, error) {
 	salt, err := generateSalt(saltLength)
 	if err != nil {
-		return nil, err
+		return "", "", err
 	}
 
-	hashedPassword := argon2.IDKey([]byte(password), salt, timeParams, memory, threads, keyLength)
-	return hashedPassword, nil
+	hash := argon2.IDKey(
+		[]byte(password),
+		salt,
+		timeParams,
+		memory,
+		threads,
+		keyLength,
+	)
+
+	hashHex := hex.EncodeToString(hash)
+	saltHex := hex.EncodeToString(salt)
+
+	return hashHex, saltHex, nil
 }
 
-func VerifyPassword(password, hashPassword string) bool {
-	newhashed, err := HashingPassword(password)
+func VerifyPassword(password, hashHex, saltHex string) bool {
+	hash, err := hex.DecodeString(hashHex)
 	if err != nil {
 		return false
 	}
-	return subtle.ConstantTimeCompare(newhashed, []byte(hashPassword)) == 1
+
+	salt, err := hex.DecodeString(saltHex)
+	if err != nil {
+		return false
+	}
+
+	newHash := argon2.IDKey(
+		[]byte(password),
+		salt,
+		timeParams,
+		memory,
+		threads,
+		keyLength,
+	)
+
+	return subtle.ConstantTimeCompare(newHash, hash) == 1
 }

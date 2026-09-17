@@ -19,6 +19,7 @@ require (
 	github.com/gofiber/schema v1.8.6 // indirect
 	github.com/gofiber/swagger/v2 v2.0.0-20260208141700-e4cb1aaf502c // indirect
 	github.com/gofiber/utils/v2 v2.5.1 // indirect
+	github.com/golang-jwt/jwt/v5 v5.3.1 // indirect
 	github.com/golang-migrate/migrate/v4 v4.20.1 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect

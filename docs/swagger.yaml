@@ -1,5 +1,12 @@
 definitions:
-  auth.UserInput:
+  auth.UserLogin:
+    properties:
+      name:
+        type: string
+      password:
+        type: string
+    type: object
+  auth.UserRegister:
     properties:
       display_name:
         type: string
@@ -13,18 +20,58 @@ definitions:
 info:
   contact: {}
 paths:
+  /api/v1/auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate a user and create an authentication cookie
+      parameters:
+      - description: Login credentials
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/auth.UserLogin'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Login successful
+          schema:
+            type: string
+        "400":
+          description: Invalid request body
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Invalid username or password
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Login user
+      tags:
+      - Auth
   /api/v1/auth/register:
     post:
       consumes:
       - application/json
       description: Create a new user account
       parameters:
-      - description: Register input
+      - description: User Register
         in: body
         name: body
         required: true
         schema:
-          $ref: '#/definitions/auth.UserInput'
+          $ref: '#/definitions/auth.UserRegister'
       produces:
       - application/json
       responses:
