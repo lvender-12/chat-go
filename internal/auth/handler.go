@@ -64,7 +64,9 @@ func (h *Handler) Register(c fiber.Ctx) error {
 	)
 
 	c.Status(fiber.StatusCreated)
-	return c.SendString("Auth handled successfully")
+	return c.JSON(fiber.Map{
+		"message": "Registration handled successfully",
+	})
 }
 
 // Login
@@ -152,5 +154,7 @@ func (h *Handler) Login(c fiber.Ctx) error {
 	)
 
 	c.Status(fiber.StatusOK)
-	return c.SendString("Auth handled successfully")
+	return c.JSON(fiber.Map{
+		"message": "Auth handled successfully",
+	})
 }
