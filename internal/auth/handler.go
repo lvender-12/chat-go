@@ -34,7 +34,12 @@ func (h *Handler) Register(c fiber.Ctx) error {
 		return err
 	}
 
+	if err := h.service.Register(&input, c); err != nil {
+		return err
+	}
+
 	c.Set("Content-Type", "application/json")
-	h.logger.Debug("User Input", "input", input)
+	h.logger.Debug("Register Handler", "input", input)
+	c.Status(fiber.StatusCreated)
 	return c.SendString("Auth handled successfully")
 }
