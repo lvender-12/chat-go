@@ -17,6 +17,11 @@ definitions:
       username:
         type: string
     type: object
+  users.AddFriendRequest:
+    properties:
+      name:
+        type: string
+    type: object
   users.UserProfile:
     properties:
       display_name:
@@ -99,6 +104,55 @@ paths:
       summary: Register user
       tags:
       - Auth
+  /api/v1/users/add-friend:
+    post:
+      consumes:
+      - application/json
+      description: Send a friend request to a user by username or email. If the target
+        user has already sent a friend request, the request will be accepted instead.
+      parameters:
+      - description: Friend request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/users.AddFriendRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Friend request sent or accepted
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: User not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Add a friend
+      tags:
+      - friend
   /api/v1/users/profile:
     get:
       description: Get the profile of the currently authenticated user
@@ -129,5 +183,5 @@ paths:
             type: object
       summary: Get current user profile
       tags:
-      - Auth
+      - users
 swagger: "2.0"
