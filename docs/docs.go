@@ -119,7 +119,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/users/add-friend": {
+        "/api/v1/friend/add-friend": {
             "post": {
                 "description": "Send a friend request to a user by username or email. If the target user has already sent a friend request, the request will be accepted instead.",
                 "consumes": [
@@ -139,7 +139,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/users.AddFriendRequest"
+                            "$ref": "#/definitions/friends.AddFriendRequest"
                         }
                     }
                 ],
@@ -173,6 +173,44 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "User not found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/friend/friends": {
+            "get": {
+                "description": "Get all friends of the currently authenticated user",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "friend"
+                ],
+                "summary": "Get friends",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/friends.FriendsResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -269,11 +307,39 @@ const docTemplate = `{
                 }
             }
         },
-        "users.AddFriendRequest": {
+        "friends.AddFriendRequest": {
             "type": "object",
             "properties": {
                 "name": {
                     "type": "string"
+                }
+            }
+        },
+        "friends.FriendDto": {
+            "type": "object",
+            "properties": {
+                "display_name": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "friends.FriendsResponse": {
+            "type": "object",
+            "properties": {
+                "friends": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/friends.FriendDto"
+                    }
                 }
             }
         },

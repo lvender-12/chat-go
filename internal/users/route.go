@@ -14,5 +14,4 @@ func RouteUsers(app fiber.Router, state *app.State, logger *slog.Logger) {
 
 	users := app.Group("/users")
 	users.Get("/profile", handler.Profile)
-	users.Post("/add-friend", handler.AddFriend)
 }

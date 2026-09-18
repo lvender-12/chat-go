@@ -17,10 +17,28 @@ definitions:
       username:
         type: string
     type: object
-  users.AddFriendRequest:
+  friends.AddFriendRequest:
     properties:
       name:
         type: string
+    type: object
+  friends.FriendDto:
+    properties:
+      display_name:
+        type: string
+      email:
+        type: string
+      id:
+        type: integer
+      username:
+        type: string
+    type: object
+  friends.FriendsResponse:
+    properties:
+      friends:
+        items:
+          $ref: '#/definitions/friends.FriendDto'
+        type: array
     type: object
   users.UserProfile:
     properties:
@@ -104,7 +122,7 @@ paths:
       summary: Register user
       tags:
       - Auth
-  /api/v1/users/add-friend:
+  /api/v1/friend/add-friend:
     post:
       consumes:
       - application/json
@@ -116,7 +134,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/users.AddFriendRequest'
+          $ref: '#/definitions/friends.AddFriendRequest'
       produces:
       - application/json
       responses:
@@ -151,6 +169,31 @@ paths:
               type: string
             type: object
       summary: Add a friend
+      tags:
+      - friend
+  /api/v1/friend/friends:
+    get:
+      description: Get all friends of the currently authenticated user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/friends.FriendsResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get friends
       tags:
       - friend
   /api/v1/users/profile:

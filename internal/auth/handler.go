@@ -44,6 +44,13 @@ func (h *Handler) Register(c fiber.Ctx) error {
 		"email", input.Email,
 	)
 
+	if !utils.IsValidEmail(input.Email) {
+		return fiber.NewError(
+			fiber.StatusBadRequest,
+			"email is invalid",
+		)
+	}
+
 	if err := h.service.Register(&input, c); err != nil {
 		h.logger.Warn(
 			"user registration failed",
@@ -55,14 +62,13 @@ func (h *Handler) Register(c fiber.Ctx) error {
 		return err
 	}
 
-	c.Set("Content-Type", "application/json")
-
 	h.logger.Info(
 		"user registered successfully",
 		"username", input.Username,
 		"email", input.Email,
 	)
 
+	c.Set(fiber.HeaderContentType, fiber.MIMEApplicationJSON)
 	c.Status(fiber.StatusCreated)
 	return c.JSON(fiber.Map{
 		"message": "Registration handled successfully",
@@ -137,7 +143,6 @@ func (h *Handler) Login(c fiber.Ctx) error {
 		"user_id", user.ID,
 	)
 
-	c.Set("Content-Type", "application/json")
 	c.Cookie(&fiber.Cookie{
 		Name:     "AuthToken",
 		Value:    token,
@@ -153,6 +158,7 @@ func (h *Handler) Login(c fiber.Ctx) error {
 		"username", user.Username,
 	)
 
+	c.Set(fiber.HeaderContentType, fiber.MIMEApplicationJSON)
 	c.Status(fiber.StatusOK)
 	return c.JSON(fiber.Map{
 		"message": "Auth handled successfully",
