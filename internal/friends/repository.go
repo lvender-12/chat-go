@@ -158,7 +158,7 @@ func (r *Repository) AddFriend(sender uint64, receiver uint64, ctx fiber.Ctx) er
 		return err
 	}
 
-	r.logger.Info(
+	r.logger.Debug(
 		"friend request inserted",
 		"sender_id", sender,
 		"receiver_id", receiver,
@@ -277,7 +277,7 @@ func (r *Repository) AcceptFriendRequest(requestID uint64, ctx fiber.Ctx) error 
 		return err
 	}
 
-	r.logger.Info(
+	r.logger.Debug(
 		"friend request accepted and conversation created",
 		"request_id", requestID,
 		"user_one_id", userOneID,

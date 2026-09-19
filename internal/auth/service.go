@@ -53,7 +53,7 @@ func (s *Service) Register(input *UserRegister, ctx fiber.Ctx) error {
 		)
 	}
 
-	s.logger.Info(
+	s.logger.Debug(
 		"registering user",
 		"username", input.Username,
 		"email", input.Email,
@@ -93,7 +93,7 @@ func (s *Service) Register(input *UserRegister, ctx fiber.Ctx) error {
 		return err
 	}
 
-	s.logger.Info(
+	s.logger.Debug(
 		"user created successfully",
 		"username", input.Username,
 		"email", input.Email,
@@ -158,7 +158,7 @@ func (s *Service) Login(input *UserLogin, ctx fiber.Ctx) (*User, error) {
 		)
 	}
 
-	s.logger.Info(
+	s.logger.Debug(
 		"user authenticated successfully",
 		"user_id", user.ID,
 		"username", user.Username,

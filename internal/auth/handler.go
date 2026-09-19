@@ -62,7 +62,7 @@ func (h *Handler) Register(c fiber.Ctx) error {
 		return err
 	}
 
-	h.logger.Info(
+	h.logger.Debug(
 		"user registered successfully",
 		"username", input.Username,
 		"email", input.Email,
@@ -152,7 +152,7 @@ func (h *Handler) Login(c fiber.Ctx) error {
 		Path:     "/",
 	})
 
-	h.logger.Info(
+	h.logger.Debug(
 		"user logged in successfully",
 		"user_id", user.ID,
 		"username", user.Username,

@@ -13,9 +13,8 @@ import (
 )
 
 func main() {
-	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
-		Level: slog.LevelDebug,
-	}))
+	var logger *slog.Logger
+
 	Routeapp := fiber.New()
 
 	conf, err := config.LoadConfig("config/config.json")
@@ -24,6 +23,15 @@ func main() {
 		panic(err)
 	}
 
+	if conf.App.LogLevel == "debug" {
+		logger = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+			Level: slog.LevelDebug,
+		}))
+	} else {
+		logger = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+			Level: slog.LevelInfo,
+		}))
+	}
 	db, err := database.LoadDB(conf.Database.Driver, conf.Database.User, conf.Database.Password, conf.Database.Name, logger)
 	if err != nil {
 		slog.Error("failed to load db", "error", err)
