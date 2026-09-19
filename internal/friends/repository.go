@@ -294,6 +294,7 @@ func (r *Repository) GetFriends(userID uint64, ctx fiber.Ctx) (FriendsResponse, 
 	rows, err := r.db.QueryContext(
 		ctx,
 		`SELECT
+			c.id,
 			u.id,
 			u.username,
 			u.email,
@@ -319,6 +320,7 @@ func (r *Repository) GetFriends(userID uint64, ctx fiber.Ctx) (FriendsResponse, 
 		var friend FriendDto
 
 		err := rows.Scan(
+			&friend.ConversationID,
 			&friend.ID,
 			&friend.Username,
 			&friend.Email,

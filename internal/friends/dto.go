@@ -26,10 +26,11 @@ type FriendRequest struct {
 }
 
 type FriendDto struct {
-	ID          uint64 `json:"id"`
-	Username    string `json:"username"`
-	Email       string `json:"email"`
-	DisplayName string `json:"display_name"`
+	ConversationID uint64 `json:"conversation_id"`
+	ID             uint64 `json:"id"`
+	Username       string `json:"username"`
+	Email          string `json:"email"`
+	DisplayName    string `json:"display_name"`
 }
 
 type FriendsResponse struct {
