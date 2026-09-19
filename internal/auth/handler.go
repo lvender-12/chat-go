@@ -164,3 +164,31 @@ func (h *Handler) Login(c fiber.Ctx) error {
 		"message": "Auth handled successfully",
 	})
 }
+
+// Logout godoc
+// @Summary      Logout user
+// @Description  Clear the authentication cookie and log out the current user
+// @Tags         Auth
+// @Produce      json
+// @Success      200  {object} map[string]string
+// @Failure      500  {object} map[string]string
+// @Router       /api/v1/auth/logout [post]
+func (h *Handler) Logout(c fiber.Ctx) error {
+
+	c.Cookie(&fiber.Cookie{
+		Name:     "AuthToken",
+		Value:    "",
+		HTTPOnly: true,
+		Secure:   false,
+		SameSite: "Lax",
+		Path:     "/",
+	})
+
+	h.logger.Debug("user logged out successfully")
+
+	c.Set(fiber.HeaderContentType, fiber.MIMEApplicationJSON)
+	c.Status(fiber.StatusOK)
+	return c.JSON(fiber.Map{
+		"message": "Logout handled successfully",
+	})
+}
