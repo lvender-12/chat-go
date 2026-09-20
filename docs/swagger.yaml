@@ -42,6 +42,17 @@ definitions:
       username:
         type: string
     type: object
+  friends.FriendRequestDto:
+    properties:
+      id:
+        type: integer
+      receiver_id:
+        type: integer
+      sender_id:
+        type: integer
+      status:
+        type: string
+    type: object
   friends.FriendsResponse:
     properties:
       friends:
@@ -258,6 +269,80 @@ paths:
               type: string
             type: object
       summary: Get friends
+      tags:
+      - friend
+  /api/v1/friend/friends-request:
+    get:
+      description: Get all friends of the currently authenticated user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/friends.FriendRequestDto'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get friends request
+      tags:
+      - friend
+  /api/v1/friend/reject-friend/{id}:
+    post:
+      description: Reject a friend request received by the currently authenticated
+        user
+      parameters:
+      - description: Friend request ID
+        format: int64
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Friend request rejected successfully
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid friend request ID
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Friend request not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Reject a friend request
       tags:
       - friend
   /api/v1/users/profile:

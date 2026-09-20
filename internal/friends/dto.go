@@ -36,3 +36,10 @@ type FriendDto struct {
 type FriendsResponse struct {
 	Friends []FriendDto `json:"friends"`
 }
+
+type FriendRequestDto struct {
+	ID         uint64 `json:"id"`
+	SenderID   uint64 `json:"sender_id"`
+	ReceiverID uint64 `json:"receiver_id"`
+	Status     string `json:"status"`
+}

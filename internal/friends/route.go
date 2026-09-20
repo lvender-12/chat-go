@@ -19,5 +19,7 @@ func RouteFriends(app fiber.Router, state *app.State, logger *slog.Logger) {
 	})
 
 	friends.Post("/add-friend", handler.AddFriend)
+	friends.Post("/reject-friend/:id", handler.RejectRequest)
 	friends.Get("/friends", handler.GetFriends)
+	friends.Get("/friends-request", handler.GetRequests)
 }

@@ -86,3 +86,28 @@ func (s *Service) GetFriends(userID uint64, ctx fiber.Ctx) (FriendsResponse, err
 
 	return friends, nil
 }
+
+func (s *Service) GetRequests(userID uint64, ctx fiber.Ctx) ([]FriendRequestDto, error) {
+	s.logger.Debug("Hit Get Requests Handler")
+	requests, err := s.repo.GetRequests(userID, ctx)
+	if err != nil {
+		return nil, fiber.NewError(
+			fiber.StatusInternalServerError,
+			"failed to get requests",
+		)
+	}
+
+	return requests, nil
+}
+
+func (s *Service) RejectRequest(requestID uint64, userID uint64, ctx fiber.Ctx) error {
+	s.logger.Debug("Hit Reject Request Handler")
+	if err := s.repo.RejectFriendRequest(requestID, userID, ctx); err != nil {
+		return fiber.NewError(
+			fiber.StatusInternalServerError,
+			"failed to reject friend request",
+		)
+	}
+
+	return nil
+}

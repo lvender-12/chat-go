@@ -339,3 +339,65 @@ func (r *Repository) GetFriends(userID uint64, ctx fiber.Ctx) (FriendsResponse, 
 
 	return friends, nil
 }
+
+func (r *Repository) GetRequests(userID uint64, ctx fiber.Ctx) ([]FriendRequestDto, error) {
+	r.logger.Debug("Hit Get Requests Handler")
+
+	var requests []FriendRequestDto
+
+	rows, err := r.db.QueryContext(
+		ctx,
+		`SELECT
+			id,
+			sender_id,
+			receiver_id,
+			status
+		FROM friend_requests
+		WHERE receiver_id = ? OR sender_id = ?`,
+		userID,
+		userID,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+		var request FriendRequestDto
+
+		err := rows.Scan(
+			&request.ID,
+			&request.SenderID,
+			&request.ReceiverID,
+			&request.Status,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		requests = append(requests, request)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return requests, nil
+}
+
+func (r *Repository) RejectFriendRequest(requestID uint64, userID uint64, ctx fiber.Ctx) error {
+	r.logger.Debug("Hit Reject Friend Request Handler")
+
+	_, err := r.db.ExecContext(
+		ctx,
+		`UPDATE friend_requests
+		SET status = 'rejected'
+		WHERE id = ? AND receiver_id = ?`,
+		requestID,
+		userID,
+	)
+
+	return err
+}

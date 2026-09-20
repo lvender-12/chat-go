@@ -4,6 +4,7 @@ import (
 	"chat-go/internal/app"
 	"chat-go/internal/utils"
 	"log/slog"
+	"strconv"
 
 	"github.com/gofiber/fiber/v3"
 )
@@ -128,4 +129,83 @@ func (h *Handler) GetFriends(c fiber.Ctx) error {
 		return err
 	}
 	return c.Status(fiber.StatusOK).JSON(friends)
+}
+
+// GetFriends
+// @Summary Get friends request
+// @Description Get all friends of the currently authenticated user
+// @Tags friend
+// @Produce json
+// @Success 200 {object} []FriendRequestDto
+// @Failure 401 {object} map[string]string "Unauthorized"
+// @Failure 500 {object} map[string]string "Internal server error"
+// @Router /api/v1/friend/friends-request [get]
+func (h *Handler) GetRequests(c fiber.Ctx) error {
+	h.logger.Debug("Hit Get Friends Handler")
+	userID, err := utils.GetUserIDFromToken(
+		c,
+		[]byte(h.state.Config.JWT.Secret),
+	)
+	h.logger.Debug("Id", "userID", userID)
+	if err != nil {
+		return fiber.NewError(
+			fiber.StatusUnauthorized,
+			err.Error(),
+		)
+	}
+
+	requests, err := h.service.GetRequests(userID, c)
+	if err != nil {
+		return err
+	}
+	return c.Status(fiber.StatusOK).JSON(requests)
+}
+
+// RejectRequest
+// @Summary Reject a friend request
+// @Description Reject a friend request received by the currently authenticated user
+// @Tags friend
+// @Produce json
+// @Param id path uint64 true "Friend request ID"
+// @Success 200 {object} map[string]string "Friend request rejected successfully"
+// @Failure 400 {object} map[string]string "Invalid friend request ID"
+// @Failure 401 {object} map[string]string "Unauthorized"
+// @Failure 404 {object} map[string]string "Friend request not found"
+// @Failure 500 {object} map[string]string "Internal server error"
+// @Router /api/v1/friend/reject-friend/{id} [post]
+func (h *Handler) RejectRequest(c fiber.Ctx) error {
+	h.logger.Debug("hit reject request handler")
+
+	requestID, err := strconv.ParseUint(c.Params("id"), 10, 64)
+	if err != nil {
+		return fiber.NewError(
+			fiber.StatusBadRequest,
+			"invalid friend request id",
+		)
+	}
+
+	userID, err := utils.GetUserIDFromToken(
+		c,
+		[]byte(h.state.Config.JWT.Secret),
+	)
+	if err != nil {
+		return fiber.NewError(
+			fiber.StatusUnauthorized,
+			err.Error(),
+		)
+	}
+
+	h.logger.Debug(
+		"rejecting friend request",
+		"request_id", requestID,
+		"user_id", userID,
+	)
+
+	if err := h.service.RejectRequest(requestID, userID, c); err != nil {
+		return err
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "request rejected successfully",
+	})
 }
