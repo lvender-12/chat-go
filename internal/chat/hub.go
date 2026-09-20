@@ -6,55 +6,89 @@ import (
 	"github.com/gofiber/contrib/v3/websocket"
 )
 
+type Client struct {
+	UserID         uint64
+	Conn           *websocket.Conn
+	ConversationID uint64
+	Send           chan []byte
+}
+
+type Broadcast struct {
+	ConversationID uint64
+	Msg            []byte
+}
+
 type Hub struct {
-	mu    sync.RWMutex
-	rooms map[uint64]map[*websocket.Conn]struct{}
+	Clients map[uint64]map[*Client]struct{}
+
+	mu sync.RWMutex
+
+	register   chan *Client
+	unregister chan *Client
+	broadcast  chan Broadcast
 }
 
 func NewHub() *Hub {
 	return &Hub{
-		rooms: make(map[uint64]map[*websocket.Conn]struct{}),
+		Clients:    make(map[uint64]map[*Client]struct{}),
+		register:   make(chan *Client),
+		unregister: make(chan *Client),
+		broadcast:  make(chan Broadcast),
 	}
 }
 
-func (h *Hub) Register(conversationID uint64, ws *websocket.Conn) {
+func (h *Hub) Run() {
+	for {
+		select {
+		case client := <-h.register:
+			h.registerClient(client)
+
+		case client := <-h.unregister:
+			h.unregisterClient(client)
+
+		case broadcast := <-h.broadcast:
+			h.sendBroadcast(broadcast)
+		}
+	}
+}
+
+func (h *Hub) registerClient(client *Client) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 
-	if h.rooms[conversationID] == nil {
-		h.rooms[conversationID] = make(map[*websocket.Conn]struct{})
+	if h.Clients[client.ConversationID] == nil {
+		h.Clients[client.ConversationID] = make(map[*Client]struct{})
 	}
 
-	h.rooms[conversationID][ws] = struct{}{}
+	h.Clients[client.ConversationID][client] = struct{}{}
 }
 
-func (h *Hub) Unregister(conversationID uint64, ws *websocket.Conn) {
+func (h *Hub) unregisterClient(client *Client) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 
-	delete(h.rooms[conversationID], ws)
+	clients, ok := h.Clients[client.ConversationID]
+	if !ok {
+		return
+	}
 
-	if len(h.rooms[conversationID]) == 0 {
-		delete(h.rooms, conversationID)
+	delete(clients, client)
+
+	if len(clients) == 0 {
+		delete(h.Clients, client.ConversationID)
 	}
 }
 
-func (h *Hub) Broadcast(conversationID uint64, data interface{}) {
+func (h *Hub) sendBroadcast(broadcast Broadcast) {
 	h.mu.RLock()
+	defer h.mu.RUnlock()
 
-	connections := make([]*websocket.Conn, 0, len(h.rooms[conversationID]))
+	clients := h.Clients[broadcast.ConversationID]
 
-	for ws := range h.rooms[conversationID] {
-		connections = append(connections, ws)
-	}
-
-	h.mu.RUnlock()
-
-	for _, ws := range connections {
-		_ = ws.WriteJSON(WsResponse{
-			Status:  200,
-			Message: "message",
-			Data:    data,
-		})
+	for client := range clients {
+		select {
+		case client.Send <- broadcast.Msg:
+		default:
+		}
 	}
 }

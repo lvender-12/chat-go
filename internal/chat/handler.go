@@ -3,6 +3,7 @@ package chat
 import (
 	"chat-go/internal/app"
 	"chat-go/internal/utils"
+	"encoding/json"
 	"log/slog"
 	"strconv"
 
@@ -17,7 +18,12 @@ type Handler struct {
 	logger  *slog.Logger
 }
 
-func NewHandler(service *Service, state *app.State, hub *Hub, logger *slog.Logger) *Handler {
+func NewHandler(
+	service *Service,
+	state *app.State,
+	hub *Hub,
+	logger *slog.Logger,
+) *Handler {
 	return &Handler{
 		service: service,
 		state:   state,
@@ -40,7 +46,7 @@ func NewHandler(service *Service, state *app.State, hub *Hub, logger *slog.Logge
 func (h *Handler) GetChat(ws *websocket.Conn) error {
 	id := ws.Params("id")
 
-	idUint64, err := strconv.ParseUint(id, 10, 64)
+	conversationID, err := strconv.ParseUint(id, 10, 64)
 	if err != nil {
 		return ws.WriteJSON(WsResponse{
 			Status:  fiber.StatusBadRequest,
@@ -48,11 +54,17 @@ func (h *Handler) GetChat(ws *websocket.Conn) error {
 		})
 	}
 
-	h.hub.Register(idUint64, ws)
+	userIDValue := ws.Locals("user_id")
 
-	defer h.hub.Unregister(idUint64, ws)
+	userID, ok := userIDValue.(uint64)
+	if !ok {
+		return ws.WriteJSON(WsResponse{
+			Status:  fiber.StatusUnauthorized,
+			Message: "unauthorized",
+		})
+	}
 
-	chat, err := h.service.GetChat(idUint64)
+	chat, err := h.service.GetChat(conversationID)
 	if err != nil {
 		return ws.WriteJSON(WsResponse{
 			Status:  fiber.StatusInternalServerError,
@@ -60,19 +72,35 @@ func (h *Handler) GetChat(ws *websocket.Conn) error {
 		})
 	}
 
-	if err := ws.WriteJSON(WsResponse{
+	data, err := json.Marshal(WsResponse{
 		Status:  fiber.StatusOK,
 		Message: "success",
 		Data:    chat,
-	}); err != nil {
+	})
+	if err != nil {
 		return err
 	}
 
-	for {
-		if _, _, err := ws.ReadMessage(); err != nil {
-			return err
-		}
+	client := &Client{
+		UserID:         userID,
+		Conn:           ws,
+		ConversationID: conversationID,
+		Send:           make(chan []byte, 256),
 	}
+
+	h.hub.register <- client
+
+	defer func() {
+		h.hub.unregister <- client
+	}()
+
+	go client.WritePump(h.logger)
+
+	client.Send <- data
+
+	client.ReadPump(h.hub, h.logger)
+
+	return nil
 }
 
 // SendMessage godoc
@@ -109,7 +137,11 @@ func (h *Handler) SendMessage(c fiber.Ctx) error {
 		)
 	}
 
-	conversationID, err := strconv.ParseUint(c.Params("id"), 10, 64)
+	conversationID, err := strconv.ParseUint(
+		c.Params("id"),
+		10,
+		64,
+	)
 	if err != nil {
 		return fiber.NewError(
 			fiber.StatusBadRequest,
@@ -133,7 +165,22 @@ func (h *Handler) SendMessage(c fiber.Ctx) error {
 		)
 	}
 
-	h.hub.Broadcast(conversationID, chat)
+	data, err := json.Marshal(WsResponse{
+		Status:  fiber.StatusOK,
+		Message: "message",
+		Data:    chat,
+	})
+	if err != nil {
+		return fiber.NewError(
+			fiber.StatusInternalServerError,
+			"failed to encode message",
+		)
+	}
+
+	h.hub.broadcast <- Broadcast{
+		ConversationID: conversationID,
+		Msg:            data,
+	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"message": "message sent",
