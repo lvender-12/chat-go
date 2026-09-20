@@ -11,7 +11,7 @@ import (
 )
 
 func LoadDB(driver string, userdb string, password string, dbname string, logger *slog.Logger) (*sql.DB, error) {
-	db, err := sql.Open(driver, userdb+":"+password+"@/"+dbname)
+	db, err := sql.Open(driver, userdb+":"+password+"@/"+dbname+"?parseTime=true")
 	if err != nil {
 		return nil, err
 	}

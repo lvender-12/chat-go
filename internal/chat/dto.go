@@ -3,8 +3,8 @@ package chat
 import "time"
 
 type MessageResponse struct {
-	ID      uint64     `json:"id"`
-	Message []Messages `json:"message"`
+	ConversationID uint64     `json:"conversation_id"`
+	Messages       []Messages `json:"messages"`
 }
 
 type Messages struct {
@@ -18,12 +18,16 @@ type Messages struct {
 }
 
 type WsResponse struct {
-	Status  int
-	Message string
-	Data    interface{}
+	Status  int         `json:"status"`
+	Message string      `json:"message"`
+	Data    interface{} `json:"data,omitempty"`
 }
 
 type ErrorResponse struct {
 	Status  int    `json:"status"`
 	Message string `json:"message"`
+}
+
+type MessageRequest struct {
+	Content string `json:"content"`
 }

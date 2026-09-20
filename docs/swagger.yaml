@@ -24,6 +24,11 @@ definitions:
       status:
         type: integer
     type: object
+  chat.MessageRequest:
+    properties:
+      content:
+        type: string
+    type: object
   friends.AddFriendRequest:
     properties:
       name:
@@ -184,6 +189,47 @@ paths:
           schema:
             $ref: '#/definitions/chat.ErrorResponse'
       summary: Get chat history
+      tags:
+      - Chat
+    post:
+      consumes:
+      - application/json
+      description: Send a message to a conversation
+      parameters:
+      - description: Conversation ID
+        format: int64
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Message content
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/chat.MessageRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/chat.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/chat.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/chat.ErrorResponse'
+      summary: Send a message
       tags:
       - Chat
   /api/v1/friend/add-friend:
