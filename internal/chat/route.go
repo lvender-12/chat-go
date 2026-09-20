@@ -25,18 +25,19 @@ func RouteWs(app fiber.Router, state *app.State, logger *slog.Logger) {
 		return middleware.CheckAuth(c, state.Config.JWT.Secret, *logger)
 	})
 
-	chat.Get(
-		"/:id",
-		UpgradeGuard(),
-		func(c fiber.Ctx) error {
-			userID, err := utils.GetUserIDFromToken(c, []byte(state.Config.JWT.Secret))
-			if err != nil {
-				return fiber.ErrUnauthorized
-			}
-			c.Locals("user_id", userID)
+	chat.Use(func(c fiber.Ctx) error {
+		return middleware.CheckUserIdOnConversations(c, state.Config.JWT.Secret, *logger, state.DB)
+	})
 
-			return c.Next()
-		},
+	chat.Get("/:id", UpgradeGuard(), func(c fiber.Ctx) error {
+		userID, err := utils.GetUserIDFromToken(c, []byte(state.Config.JWT.Secret))
+		if err != nil {
+			return fiber.ErrUnauthorized
+		}
+		c.Locals("user_id", userID)
+
+		return c.Next()
+	},
 		websocket.New(func(ws *websocket.Conn) {
 			if err := handler.GetChat(ws); err != nil {
 				logger.Error("websocket handler error", "error", err)
