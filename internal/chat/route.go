@@ -3,6 +3,7 @@ package chat
 import (
 	"chat-go/internal/app"
 	"chat-go/internal/middleware"
+	"chat-go/internal/rabbit"
 	"chat-go/internal/utils"
 	"log/slog"
 
@@ -17,7 +18,23 @@ func RouteWs(app fiber.Router, state *app.State, logger *slog.Logger) {
 	hub := NewHub()
 	go hub.Run()
 
-	handler := NewHandler(service, state, hub, logger)
+	bus, err := rabbit.NewBus(state.Rabbit, logger)
+	if err != nil {
+		logger.Error("failed to init rabbit chat bus", "error", err)
+		panic(err)
+	}
+
+	if err := bus.Consume(func(event rabbit.Event) {
+		hub.Broadcast(Broadcast{
+			ConversationID: event.ConversationID,
+			Msg:            event.Message,
+		})
+	}); err != nil {
+		logger.Error("failed to start rabbit consumer", "error", err)
+		panic(err)
+	}
+
+	handler := NewHandler(service, state, hub, bus, logger)
 
 	chat := app.Group("/chat")
 

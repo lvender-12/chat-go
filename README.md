@@ -1,13 +1,13 @@
 # chat-go
 
-Backend chat API berbasis Go (Fiber) dengan autentikasi JWT (cookie), fitur teman, dan realtime chat via WebSocket.
+Backend chat API berbasis Go (Fiber) dengan autentikasi JWT (cookie), fitur teman, dan realtime chat via WebSocket + RabbitMQ.
 
 ## Fitur
 
 - Auth: register, login, logout (JWT di cookie `AuthToken`)
 - Users: ambil/edit profil, upload avatar
-- Friends: kirim/terima/tolak friend request, daftar teman
-- Chat: riwayat chat via WebSocket, kirim/edit/hapus pesan (broadcast realtime)
+- Friends: kirim / terima / tolak friend request, daftar teman
+- Chat: riwayat chat via WebSocket, kirim/edit/hapus pesan (broadcast realtime via RabbitMQ)
 - Response API seragam (`status`, `message`, `data`)
 - Swagger UI di `/docs`
 - Migrasi database otomatis (opsional via config)
@@ -20,6 +20,7 @@ Backend chat API berbasis Go (Fiber) dengan autentikasi JWT (cookie), fitur tema
 | Auth | JWT (`golang-jwt`) + cookie |
 | Password | Argon2 |
 | Database | MySQL |
+| Message broker | RabbitMQ (`amqp091-go`) |
 | Migrasi | golang-migrate |
 | Docs | swag / Swagger UI |
 
@@ -37,6 +38,7 @@ chat-go/
 │   ├── users/           # profile, edit profile, upload avatar
 │   ├── friends/         # friend requests & list
 │   ├── chat/            # websocket hub + messaging
+│   ├── rabbit/          # koneksi RabbitMQ + chat bus (publish/consume)
 │   ├── middleware/      # auth & conversation access
 │   ├── config/          # load config
 │   ├── database/        # DB + migrate
@@ -51,6 +53,7 @@ chat-go/
 
 - Go 1.27+
 - MySQL
+- RabbitMQ
 
 ## Setup
 
@@ -62,7 +65,7 @@ chat-go/
 cp config/config.example.json config/config.json
 ```
 
-3. Sesuaikan `config/config.json` (DB, JWT secret, migration path, dll).
+3. Sesuaikan `config/config.json` (DB, JWT secret, RabbitMQ, migration path, dll).
 
 Contoh struktur config:
 
@@ -113,6 +116,12 @@ Contoh struktur config:
       "Accept"
     ],
     "allow_credentials": true
+  },
+  "rabbit": {
+    "host": "127.0.0.1",
+    "name": "guest",
+    "password": "guest",
+    "port": "5672"
   }
 }
 ```
@@ -123,7 +132,9 @@ Tambah origin frontend baru cukup di `cors.allow_origins`.
 
 4. Buat database MySQL sesuai `database.name`.
 
-5. Install dependency & jalankan server:
+5. Pastikan RabbitMQ berjalan dan kredensial di `rabbit` valid.
+
+6. Install dependency & jalankan server:
 
 ```bash
 go mod tidy
@@ -133,6 +144,12 @@ go run ./cmd/server
 Server default listen di `:3000`.
 
 Swagger UI: [http://localhost:3000/docs](http://localhost:3000/docs)
+
+## Realtime chat (Hub + RabbitMQ)
+
+- **Hub** (`internal/chat`): track koneksi WebSocket lokal per conversation.
+- **RabbitMQ bus** (`internal/rabbit`): fanout exchange `chat.fanout` untuk sebar event antar instance.
+- Alur: `Send` / `Edit` / `Delete` → simpan DB → `bus.Publish` → consumer → `hub.Broadcast` → WebSocket client.
 
 ## Format response
 
@@ -174,10 +191,11 @@ Base path: `/api/v1`
 
 | Method | Path | Auth | Keterangan |
 |--------|------|------|------------|
-| POST | `/friend/add-friend` | Cookie | Kirim / accept friend request |
-| GET | `/friend/friends` | Cookie | Daftar teman |
-| GET | `/friend/friends-request` | Cookie | Daftar request masuk |
+| POST | `/friend/add-friend` | Cookie | Kirim friend request (atau auto-accept jika ada request balik) |
+| POST | `/friend/accept-friend/:id` | Cookie | Terima request (by request ID); buat conversation |
 | POST | `/friend/reject-friend/:id` | Cookie | Tolak request |
+| GET | `/friend/friends` | Cookie | Daftar teman |
+| GET | `/friend/friends-request` | Cookie | Daftar friend request |
 
 ### Chat
 

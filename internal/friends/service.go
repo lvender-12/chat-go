@@ -64,7 +64,7 @@ func (s *Service) AddFriend(sender uint64, name string, ctx fiber.Ctx) (string, 
 	requestID, err := s.repo.CheckFriendRequest(sender, receiver, ctx)
 
 	if err == nil {
-		return "friend request accepted", s.repo.AcceptFriendRequest(requestID, ctx)
+		return "friend request accepted", s.repo.AcceptFriendRequest(requestID, sender, ctx)
 	}
 
 	if !errors.Is(err, sql.ErrNoRows) {
@@ -98,6 +98,15 @@ func (s *Service) GetRequests(userID uint64, ctx fiber.Ctx) ([]FriendRequestDto,
 	}
 
 	return requests, nil
+}
+
+func (s *Service) AcceptRequest(requestID uint64, userID uint64, ctx fiber.Ctx) error {
+	s.logger.Debug("Hit Accept Request Handler")
+	if err := s.repo.AcceptFriendRequest(requestID, userID, ctx); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (s *Service) RejectRequest(requestID uint64, userID uint64, ctx fiber.Ctx) error {

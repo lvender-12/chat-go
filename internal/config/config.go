@@ -12,6 +12,7 @@ type Config struct {
 	Migration MigrationConfig `json:"migration"`
 	Storage   StorageConfig   `json:"storage"`
 	CORS      CORSConfig      `json:"cors"`
+	Rabbit    RabbitConfig    `json:"rabbit"`
 }
 
 type AppConfig struct {
@@ -51,6 +52,13 @@ type CORSConfig struct {
 	AllowMethods     []string `json:"allow_methods"`
 	AllowHeaders     []string `json:"allow_headers"`
 	AllowCredentials bool     `json:"allow_credentials"`
+}
+
+type RabbitConfig struct {
+	Host     string `json:"host"`
+	Name     string `json:"name"`
+	Password string `json:"password"`
+	Port     string `json:"port"`
 }
 
 

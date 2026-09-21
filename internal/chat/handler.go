@@ -2,7 +2,9 @@ package chat
 
 import (
 	"chat-go/internal/app"
+	"chat-go/internal/rabbit"
 	"chat-go/internal/utils"
+	"context"
 	"encoding/json"
 	"log/slog"
 	"strconv"
@@ -15,19 +17,16 @@ type Handler struct {
 	service *Service
 	state   *app.State
 	hub     *Hub
+	bus     *rabbit.Bus
 	logger  *slog.Logger
 }
 
-func NewHandler(
-	service *Service,
-	state *app.State,
-	hub *Hub,
-	logger *slog.Logger,
-) *Handler {
+func NewHandler(service *Service, state *app.State, hub *Hub, bus *rabbit.Bus, logger *slog.Logger) *Handler {
 	return &Handler{
 		service: service,
 		state:   state,
 		hub:     hub,
+		bus:     bus,
 		logger:  logger,
 	}
 }
@@ -173,9 +172,11 @@ func (h *Handler) SendMessage(c fiber.Ctx) error {
 		)
 	}
 
-	h.hub.broadcast <- Broadcast{
-		ConversationID: conversationID,
-		Msg:            data,
+	if err := h.bus.Publish(context.Background(), conversationID, data); err != nil {
+		return fiber.NewError(
+			fiber.StatusInternalServerError,
+			"failed to publish message",
+		)
 	}
 
 	return app.JSON(
@@ -333,10 +334,5 @@ func (h *Handler) broadcastChatUpdate(conversationID uint64) error {
 		return err
 	}
 
-	h.hub.broadcast <- Broadcast{
-		ConversationID: conversationID,
-		Msg:            data,
-	}
-
-	return nil
+	return h.bus.Publish(context.Background(), conversationID, data)
 }

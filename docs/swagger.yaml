@@ -289,6 +289,43 @@ paths:
       summary: Edit a message
       tags:
       - Chat
+  /api/v1/friend/accept-friend/{id}:
+    post:
+      description: Accept a pending friend request received by the currently authenticated
+        user and create a conversation
+      parameters:
+      - description: Friend request ID
+        format: int64
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/app.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/app.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/app.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/app.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/app.Response'
+      summary: Accept a friend request
+      tags:
+      - friend
   /api/v1/friend/add-friend:
     post:
       consumes:

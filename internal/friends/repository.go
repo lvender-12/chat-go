@@ -167,7 +167,7 @@ func (r *Repository) AddFriend(sender uint64, receiver uint64, ctx fiber.Ctx) er
 	return nil
 }
 
-func (r *Repository) AcceptFriendRequest(requestID uint64, ctx fiber.Ctx) error {
+func (r *Repository) AcceptFriendRequest(requestID uint64, userID uint64, ctx fiber.Ctx) error {
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
 		return err
@@ -182,9 +182,11 @@ func (r *Repository) AcceptFriendRequest(requestID uint64, ctx fiber.Ctx) error 
 		`SELECT sender_id, receiver_id
 		 FROM friend_requests
 		 WHERE id = ?
+		   AND receiver_id = ?
 		   AND status = 'pending'
 		 FOR UPDATE`,
 		requestID,
+		userID,
 	).Scan(&senderID, &receiverID)
 
 	if err != nil {
@@ -192,6 +194,7 @@ func (r *Repository) AcceptFriendRequest(requestID uint64, ctx fiber.Ctx) error 
 			r.logger.Warn(
 				"friend request not found or already processed",
 				"request_id", requestID,
+				"user_id", userID,
 			)
 
 			return fiber.NewError(
@@ -214,8 +217,10 @@ func (r *Repository) AcceptFriendRequest(requestID uint64, ctx fiber.Ctx) error 
 		`UPDATE friend_requests
 		 SET status = 'accepted'
 		 WHERE id = ?
+		   AND receiver_id = ?
 		   AND status = 'pending'`,
 		requestID,
+		userID,
 	)
 	if err != nil {
 		r.logger.Warn(

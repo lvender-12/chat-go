@@ -92,3 +92,7 @@ func (h *Hub) sendBroadcast(broadcast Broadcast) {
 		}
 	}
 }
+
+func (h *Hub) Broadcast(broadcast Broadcast) {
+	h.broadcast <- broadcast
+}

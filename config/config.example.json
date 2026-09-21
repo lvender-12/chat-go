@@ -44,5 +44,11 @@
       "Accept"
     ],
     "allow_credentials": true
+  },
+  "rabbit": {
+    "host": "127.0.0.1",
+    "name": "guest",
+    "password": "guest",
+    "port": "5672"
   }
 }

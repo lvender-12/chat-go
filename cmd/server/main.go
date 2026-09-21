@@ -4,6 +4,7 @@ import (
 	"chat-go/internal/app"
 	"chat-go/internal/config"
 	"chat-go/internal/database"
+	"chat-go/internal/rabbit"
 	"chat-go/internal/router"
 	"log/slog"
 	"os"
@@ -48,9 +49,17 @@ func main() {
 		}
 	}
 
+	rabbitConn, err := rabbit.Connect(conf.Rabbit, logger)
+	if err != nil {
+		slog.Error("failed to connect rabbitmq", "error", err)
+		panic(err)
+	}
+	defer rabbitConn.Close()
+
 	state := &app.State{
 		DB:     db,
 		Config: conf,
+		Rabbit: rabbitConn,
 	}
 
 	Routeapp.Use(swaggerui.New(swaggerui.Config{

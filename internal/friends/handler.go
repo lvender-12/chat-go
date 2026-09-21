@@ -226,3 +226,55 @@ func (h *Handler) RejectRequest(c fiber.Ctx) error {
 		nil,
 	)
 }
+
+// AcceptRequest
+// @Summary Accept a friend request
+// @Description Accept a pending friend request received by the currently authenticated user and create a conversation
+// @Tags friend
+// @Produce json
+// @Param id path uint64 true "Friend request ID"
+// @Success 200 {object} app.Response
+// @Failure 400 {object} app.Response
+// @Failure 401 {object} app.Response
+// @Failure 404 {object} app.Response
+// @Failure 500 {object} app.Response
+// @Router /api/v1/friend/accept-friend/{id} [post]
+func (h *Handler) AcceptRequest(c fiber.Ctx) error {
+	h.logger.Debug("hit accept request handler")
+
+	requestID, err := strconv.ParseUint(c.Params("id"), 10, 64)
+	if err != nil {
+		return fiber.NewError(
+			fiber.StatusBadRequest,
+			"invalid friend request id",
+		)
+	}
+
+	userID, err := utils.GetUserIDFromToken(
+		c,
+		[]byte(h.state.Config.JWT.Secret),
+	)
+	if err != nil {
+		return fiber.NewError(
+			fiber.StatusUnauthorized,
+			err.Error(),
+		)
+	}
+
+	h.logger.Debug(
+		"accepting friend request",
+		"request_id", requestID,
+		"user_id", userID,
+	)
+
+	if err := h.service.AcceptRequest(requestID, userID, c); err != nil {
+		return err
+	}
+
+	return app.JSON(
+		c,
+		fiber.StatusOK,
+		"friend request accepted",
+		nil,
+	)
+}
