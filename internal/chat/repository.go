@@ -3,6 +3,8 @@ package chat
 import (
 	"database/sql"
 	"log/slog"
+
+	"github.com/gofiber/fiber/v3"
 )
 
 type Repository struct {
@@ -18,24 +20,47 @@ func NewRepository(db *sql.DB, logger *slog.Logger) *Repository {
 }
 
 func (r *Repository) GetChat(id uint64) (MessageResponse, error) {
-	var messages MessageResponse
-	rows, err := r.db.Query("SELECT id, sender_id, content, created_at, updated_at, deleted_at FROM messages WHERE conversation_id = ?", id)
+	messages := MessageResponse{
+		ConversationID: id,
+		Messages:       make([]Messages, 0),
+	}
+
+	rows, err := r.db.Query(`
+		SELECT
+			id,
+			sender_id,
+			content,
+			message_type,
+			created_at,
+			updated_at,
+			deleted_at
+		FROM messages
+		WHERE conversation_id = ?
+		ORDER BY created_at ASC
+	`, id)
+
 	if err != nil {
 		return MessageResponse{}, err
 	}
+
 	defer rows.Close()
 
 	for rows.Next() {
 		var message Messages
 
-		err := rows.Scan(&message.ID, &message.SenderID, &message.Content, &message.CreatedAt, &message.UpdatedAt, &message.DeletedAt)
-		if err != nil {
+		if err := rows.Scan(
+			&message.ID,
+			&message.SenderID,
+			&message.Content,
+			&message.MessageType,
+			&message.CreatedAt,
+			&message.UpdatedAt,
+			&message.DeletedAt,
+		); err != nil {
 			return MessageResponse{}, err
 		}
 
-		messages.ID = message.ID
-		messages.Message = append(messages.Message, message)
-
+		messages.Messages = append(messages.Messages, message)
 	}
 
 	if err := rows.Err(); err != nil {
@@ -43,5 +68,67 @@ func (r *Repository) GetChat(id uint64) (MessageResponse, error) {
 	}
 
 	return messages, nil
+}
 
+func (r *Repository) SendMessage(idUser uint64, idConversation uint64, content string) error {
+	_, err := r.db.Exec(`
+		INSERT INTO messages (
+			sender_id,
+			conversation_id,
+			content
+		)
+		VALUES (?, ?, ?)
+	`, idUser, idConversation, content)
+
+	return err
+}
+
+func (r *Repository) EditMessage(idUser uint64, idMessage uint64, content string, ctx fiber.Ctx) error {
+	result, err := r.db.ExecContext(
+		ctx,
+		`UPDATE messages
+		 SET content = ?
+		 WHERE id = ? AND sender_id = ?`,
+		content,
+		idMessage,
+		idUser,
+	)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return sql.ErrNoRows
+	}
+
+	return nil
+}
+
+func (r *Repository) DeleteMessage(idUser uint64, idMessage uint64, ctx fiber.Ctx) error {
+	result, err := r.db.ExecContext(
+		ctx,
+		`UPDATE messages
+			SET deleted_at = CURRENT_TIMESTAMP,
+				content = NULL
+		WHERE id = ?  AND sender_id = ?;`, idMessage, idUser)
+
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return sql.ErrNoRows
+	}
+
+	return nil
 }

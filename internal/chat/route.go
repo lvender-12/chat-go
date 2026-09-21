@@ -3,6 +3,7 @@ package chat
 import (
 	"chat-go/internal/app"
 	"chat-go/internal/middleware"
+	"chat-go/internal/utils"
 	"log/slog"
 
 	"github.com/gofiber/contrib/v3/websocket"
@@ -12,23 +13,116 @@ import (
 func RouteWs(app fiber.Router, state *app.State, logger *slog.Logger) {
 	repo := NewRepository(state.DB, logger)
 	service := NewService(repo, logger)
-	handler := NewHandler(service, state, logger)
+
+	hub := NewHub()
+	go hub.Run()
+
+	handler := NewHandler(service, state, hub, logger)
 
 	chat := app.Group("/chat")
 
 	chat.Use(func(c fiber.Ctx) error {
-		return middleware.CheckAuth(c, state.Config.JWT.Secret, *logger)
-	})
+		logger.Info(
+			"CheckAuth",
+			"path", c.Path(),
+			"upgrade", websocket.IsWebSocketUpgrade(c),
+		)
 
-	chat.Use(func(c fiber.Ctx) error {
-		if websocket.IsWebSocketUpgrade(c) {
-			logger.Debug("Request to open websocket channel")
+		return middleware.CheckAuth(
+			c,
+			state.Config.JWT.Secret,
+			*logger,
+		)
+	})
+	chat.Get(
+		"/:id",
+		UpgradeGuard(),
+		func(c fiber.Ctx) error {
+			logger.Info(
+				"CheckUserIdOnConversations",
+				"path", c.Path(),
+				"id", c.Params("id"),
+				"upgrade", websocket.IsWebSocketUpgrade(c),
+			)
+
+			return middleware.CheckUserIdOnConversations(
+				c,
+				state.Config.JWT.Secret,
+				*logger,
+				state.DB,
+			)
+		},
+
+		func(c fiber.Ctx) error {
+			userID, err := utils.GetUserIDFromToken(
+				c,
+				[]byte(state.Config.JWT.Secret),
+			)
+			if err != nil {
+				return fiber.ErrUnauthorized
+			}
+
+			c.Locals("user_id", userID)
+
 			return c.Next()
-		}
-		return fiber.ErrUpgradeRequired
-	})
+		},
 
-	chat.Get("/:id", websocket.New(func(ws *websocket.Conn) {
-		handler.GetChat(ws)
-	}))
+		websocket.New(func(ws *websocket.Conn) {
+			if err := handler.GetChat(ws); err != nil {
+				logger.Error(
+					"websocket handler error",
+					"error", err,
+				)
+			}
+		}),
+	)
+	chat.Post(
+		"/:id",
+		func(c fiber.Ctx) error {
+			return middleware.CheckUserIdOnConversations(
+				c,
+				state.Config.JWT.Secret,
+				*logger,
+				state.DB,
+			)
+		},
+
+		handler.SendMessage,
+	)
+	chat.Put(
+		"/:id",
+		func(c fiber.Ctx) error {
+			return middleware.CheckUserIdOnConversations(
+				c,
+				state.Config.JWT.Secret,
+				*logger,
+				state.DB,
+			)
+		},
+
+		handler.EditMessage,
+	)
+	chat.Delete(
+		"/:id",
+		func(c fiber.Ctx) error {
+			return middleware.CheckUserIdOnConversations(
+				c,
+				state.Config.JWT.Secret,
+				*logger,
+				state.DB,
+			)
+		},
+
+		handler.DeleteMessage,
+	)
+}
+
+func UpgradeGuard() fiber.Handler {
+	return func(c fiber.Ctx) error {
+		if !websocket.IsWebSocketUpgrade(c) {
+			return fiber.ErrUpgradeRequired
+		}
+
+		return c.Next()
+	}
 }

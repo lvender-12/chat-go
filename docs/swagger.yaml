@@ -17,12 +17,29 @@ definitions:
       username:
         type: string
     type: object
+  chat.DeleteMessageRequest:
+    properties:
+      id:
+        type: integer
+    type: object
   chat.ErrorResponse:
     properties:
       message:
         type: string
       status:
         type: integer
+    type: object
+  chat.MessageRequest:
+    properties:
+      content:
+        type: string
+    type: object
+  chat.MessageWithID:
+    properties:
+      ID:
+        type: integer
+      content:
+        type: string
     type: object
   friends.AddFriendRequest:
     properties:
@@ -164,6 +181,48 @@ paths:
       tags:
       - Auth
   /api/v1/chat/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Soft delete an existing message owned by the authenticated user
+        and broadcast the updated chat through WebSocket
+      parameters:
+      - description: Conversation ID
+        format: int64
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Message ID
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/chat.DeleteMessageRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/chat.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/chat.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/chat.ErrorResponse'
+      summary: Delete a message
+      tags:
+      - Chat
     get:
       description: Open a WebSocket connection and get chat history for a conversation
       parameters:
@@ -195,6 +254,89 @@ paths:
           schema:
             $ref: '#/definitions/chat.ErrorResponse'
       summary: Get chat history
+      tags:
+      - Chat
+    post:
+      consumes:
+      - application/json
+      description: Send a message to a conversation
+      parameters:
+      - description: Conversation ID
+        format: int64
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Message content
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/chat.MessageRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/chat.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/chat.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/chat.ErrorResponse'
+      summary: Send a message
+      tags:
+      - Chat
+    put:
+      consumes:
+      - application/json
+      description: Edit an existing message owned by the authenticated user and broadcast
+        the updated chat through WebSocket
+      parameters:
+      - description: Conversation ID
+        format: int64
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Message ID and new message content
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/chat.MessageWithID'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/chat.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/chat.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/chat.ErrorResponse'
+      summary: Edit a message
       tags:
       - Chat
   /api/v1/friend/add-friend:
