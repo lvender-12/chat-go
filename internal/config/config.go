@@ -10,6 +10,8 @@ type Config struct {
 	Database  DatabaseConfig  `json:"database"`
 	JWT       JWTConfig       `json:"jwt"`
 	Migration MigrationConfig `json:"migration"`
+	Storage   StorageConfig   `json:"storage"`
+	CORS      CORSConfig      `json:"cors"`
 }
 
 type AppConfig struct {
@@ -39,6 +41,18 @@ type MigrationConfig struct {
 	Enabled bool   `json:"enabled"`
 	Path    string `json:"path"`
 }
+
+type StorageConfig struct {
+	Path string `json:"path"`
+}
+
+type CORSConfig struct {
+	AllowOrigins     []string `json:"allow_origins"`
+	AllowMethods     []string `json:"allow_methods"`
+	AllowHeaders     []string `json:"allow_headers"`
+	AllowCredentials bool     `json:"allow_credentials"`
+}
+
 
 func LoadConfig(path string) (*Config, error) {
 	file, err := os.Open(path)

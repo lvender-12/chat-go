@@ -1,4 +1,12 @@
 definitions:
+  app.Response:
+    properties:
+      data: {}
+      message:
+        type: string
+      status:
+        type: integer
+    type: object
   auth.UserLogin:
     properties:
       name:
@@ -22,13 +30,6 @@ definitions:
       id:
         type: integer
     type: object
-  chat.ErrorResponse:
-    properties:
-      message:
-        type: string
-      status:
-        type: integer
-    type: object
   chat.MessageRequest:
     properties:
       content:
@@ -46,45 +47,12 @@ definitions:
       name:
         type: string
     type: object
-  friends.FriendDto:
-    properties:
-      conversation_id:
-        type: integer
-      display_name:
-        type: string
-      email:
-        type: string
-      id:
-        type: integer
-      username:
-        type: string
-    type: object
-  friends.FriendRequestDto:
-    properties:
-      id:
-        type: integer
-      receiver_id:
-        type: integer
-      sender_id:
-        type: integer
-      status:
-        type: string
-    type: object
-  friends.FriendsResponse:
-    properties:
-      friends:
-        items:
-          $ref: '#/definitions/friends.FriendDto'
-        type: array
-    type: object
-  users.UserProfile:
+  users.UserEdit:
     properties:
       display_name:
         type: string
       email:
         type: string
-      id:
-        type: integer
       username:
         type: string
     type: object
@@ -107,27 +75,21 @@ paths:
       - application/json
       responses:
         "200":
-          description: Login successful
+          description: OK
           schema:
-            type: string
+            $ref: '#/definitions/app.Response'
         "400":
-          description: Invalid request body
+          description: Bad Request
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/app.Response'
         "401":
-          description: Invalid username or password
+          description: Unauthorized
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/app.Response'
         "500":
-          description: Internal server error
+          description: Internal Server Error
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/app.Response'
       summary: Login user
       tags:
       - Auth
@@ -140,15 +102,11 @@ paths:
         "200":
           description: OK
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/app.Response'
         "500":
           description: Internal Server Error
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/app.Response'
       summary: Logout user
       tags:
       - Auth
@@ -167,16 +125,14 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
-          description: OK
+        "201":
+          description: Created
           schema:
-            type: string
+            $ref: '#/definitions/app.Response'
         "400":
           description: Bad Request
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/app.Response'
       summary: Register user
       tags:
       - Auth
@@ -205,21 +161,19 @@ paths:
         "200":
           description: OK
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/app.Response'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/chat.ErrorResponse'
+            $ref: '#/definitions/app.Response'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/chat.ErrorResponse'
+            $ref: '#/definitions/app.Response'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/chat.ErrorResponse'
+            $ref: '#/definitions/app.Response'
       summary: Delete a message
       tags:
       - Chat
@@ -240,19 +194,19 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/chat.ErrorResponse'
+            $ref: '#/definitions/app.Response'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/chat.ErrorResponse'
+            $ref: '#/definitions/app.Response'
         "426":
           description: Upgrade Required
           schema:
-            $ref: '#/definitions/chat.ErrorResponse'
+            $ref: '#/definitions/app.Response'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/chat.ErrorResponse'
+            $ref: '#/definitions/app.Response'
       summary: Get chat history
       tags:
       - Chat
@@ -279,21 +233,19 @@ paths:
         "200":
           description: OK
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/app.Response'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/chat.ErrorResponse'
+            $ref: '#/definitions/app.Response'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/chat.ErrorResponse'
+            $ref: '#/definitions/app.Response'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/chat.ErrorResponse'
+            $ref: '#/definitions/app.Response'
       summary: Send a message
       tags:
       - Chat
@@ -321,21 +273,19 @@ paths:
         "200":
           description: OK
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/app.Response'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/chat.ErrorResponse'
+            $ref: '#/definitions/app.Response'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/chat.ErrorResponse'
+            $ref: '#/definitions/app.Response'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/chat.ErrorResponse'
+            $ref: '#/definitions/app.Response'
       summary: Edit a message
       tags:
       - Chat
@@ -356,35 +306,25 @@ paths:
       - application/json
       responses:
         "200":
-          description: Friend request sent or accepted
+          description: OK
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/app.Response'
         "400":
-          description: Bad request
+          description: Bad Request
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/app.Response'
         "401":
           description: Unauthorized
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/app.Response'
         "404":
-          description: User not found
+          description: Not Found
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/app.Response'
         "500":
-          description: Internal server error
+          description: Internal Server Error
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/app.Response'
       summary: Add a friend
       tags:
       - friend
@@ -397,19 +337,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/friends.FriendsResponse'
+            $ref: '#/definitions/app.Response'
         "401":
           description: Unauthorized
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/app.Response'
         "500":
-          description: Internal server error
+          description: Internal Server Error
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/app.Response'
       summary: Get friends
       tags:
       - friend
@@ -422,21 +358,15 @@ paths:
         "200":
           description: OK
           schema:
-            items:
-              $ref: '#/definitions/friends.FriendRequestDto'
-            type: array
+            $ref: '#/definitions/app.Response'
         "401":
           description: Unauthorized
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/app.Response'
         "500":
-          description: Internal server error
+          description: Internal Server Error
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/app.Response'
       summary: Get friends request
       tags:
       - friend
@@ -455,35 +385,25 @@ paths:
       - application/json
       responses:
         "200":
-          description: Friend request rejected successfully
+          description: OK
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/app.Response'
         "400":
-          description: Invalid friend request ID
+          description: Bad Request
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/app.Response'
         "401":
           description: Unauthorized
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/app.Response'
         "404":
-          description: Friend request not found
+          description: Not Found
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/app.Response'
         "500":
-          description: Internal server error
+          description: Internal Server Error
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/app.Response'
       summary: Reject a friend request
       tags:
       - friend
@@ -496,26 +416,88 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/users.UserProfile'
+            $ref: '#/definitions/app.Response'
         "401":
           description: Unauthorized
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/app.Response'
         "404":
-          description: User not found
+          description: Not Found
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/app.Response'
         "500":
-          description: Internal server error
+          description: Internal Server Error
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/app.Response'
       summary: Get current user profile
+      tags:
+      - users
+    patch:
+      consumes:
+      - application/json
+      description: Update the profile of the currently authenticated user. Only non-empty
+        fields will be updated.
+      parameters:
+      - description: User profile data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/users.UserEdit'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/app.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/app.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/app.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/app.Response'
+      summary: Edit current user profile
+      tags:
+      - users
+  /api/v1/users/profile/avatar:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Upload or replace the current user's profile avatar. Maximum file
+        size is 5 MB.
+      parameters:
+      - description: Profile avatar
+        in: formData
+        name: avatar
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/app.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/app.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/app.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/app.Response'
+      summary: Upload profile avatar
       tags:
       - users
 swagger: "2.0"

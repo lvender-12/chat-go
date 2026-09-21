@@ -38,6 +38,28 @@ func TestLoadConfig_Success(t *testing.T) {
 		"migration": {
 			"enabled": true,
 			"path": "migrations"
+		},
+		"storage": {
+			"path": "./public"
+		},
+		"cors": {
+			"allow_origins": [
+				"http://localhost:5500",
+				"http://127.0.0.1:5500"
+			],
+			"allow_methods": [
+				"GET",
+				"POST",
+				"PUT",
+				"PATCH",
+				"DELETE",
+				"OPTIONS"
+			],
+			"allow_headers": [
+				"Content-Type",
+				"Accept"
+			],
+			"allow_credentials": true
 		}
 	}`
 
@@ -64,6 +86,18 @@ func TestLoadConfig_Success(t *testing.T) {
 	}
 	if !cfg.Migration.Enabled {
 		t.Fatal("Migration.Enabled = false, want true")
+	}
+	if cfg.Storage.Path != "./public" {
+		t.Fatalf("Storage.Path = %q, want %q", cfg.Storage.Path, "./public")
+	}
+	if len(cfg.CORS.AllowOrigins) != 2 {
+		t.Fatalf("CORS.AllowOrigins len = %d, want 2", len(cfg.CORS.AllowOrigins))
+	}
+	if cfg.CORS.AllowOrigins[0] != "http://localhost:5500" {
+		t.Fatalf("CORS.AllowOrigins[0] = %q, want %q", cfg.CORS.AllowOrigins[0], "http://localhost:5500")
+	}
+	if !cfg.CORS.AllowCredentials {
+		t.Fatal("CORS.AllowCredentials = false, want true")
 	}
 }
 

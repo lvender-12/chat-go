@@ -10,16 +10,39 @@
     "host": "127.0.0.1",
     "port": 3306,
     "user": "root",
-    "password": "181205",
+    "password": "password",
     "name": "chatgo",
     "charset": "utf8mb4",
     "parse_time": true
   },
   "jwt": {
-    "secret": "afawgawgawegawefawf"
+    "secret": "change-me",
+    "exp": 24
   },
   "migration": {
     "enabled": true,
     "path": "./migrations"
+  },
+  "storage": {
+    "path": "./public"
+  },
+  "cors": {
+    "allow_origins": [
+      "http://localhost:5500",
+      "http://127.0.0.1:5500"
+    ],
+    "allow_methods": [
+      "GET",
+      "POST",
+      "PUT",
+      "PATCH",
+      "DELETE",
+      "OPTIONS"
+    ],
+    "allow_headers": [
+      "Content-Type",
+      "Accept"
+    ],
+    "allow_credentials": true
   }
 }

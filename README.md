@@ -91,9 +91,33 @@ Contoh struktur config:
   "migration": {
     "enabled": true,
     "path": "./migrations"
+  },
+  "storage": {
+    "path": "./public"
+  },
+  "cors": {
+    "allow_origins": [
+      "http://localhost:5500",
+      "http://127.0.0.1:5500"
+    ],
+    "allow_methods": [
+      "GET",
+      "POST",
+      "PUT",
+      "PATCH",
+      "DELETE",
+      "OPTIONS"
+    ],
+    "allow_headers": [
+      "Content-Type",
+      "Accept"
+    ],
+    "allow_credentials": true
   }
 }
 ```
+
+Tambah origin frontend baru cukup di `cors.allow_origins`.
 
 > `config/config.json` di-ignore git. Jangan commit secret production.
 

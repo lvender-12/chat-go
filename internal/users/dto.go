@@ -5,6 +5,7 @@ type UserProfile struct {
 	Username    string `json:"username"`
 	Email       string `json:"email"`
 	DisplayName string `json:"display_name"`
+	AvatarPath  string `json:"avatar_path"`
 }
 
 type AddFriendRequest struct {
@@ -16,6 +17,12 @@ type User struct {
 	Username    string `json:"username"`
 	Email       string `json:"email"`
 	DisplayName string `json:"display_name"`
+}
+
+type UserEdit struct {
+	Username    *string `json:"username"`
+	Email       *string `json:"email"`
+	DisplayName *string `json:"display_name"`
 }
 
 type FriendRequest struct {

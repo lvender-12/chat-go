@@ -21,7 +21,10 @@ func NewService(repo *Repository, logger *slog.Logger) *Service {
 }
 
 func (s *Service) Profile(userID uint64, ctx fiber.Ctx) (*UserProfile, error) {
-	user, err := s.repo.GetUserByID(userID, ctx)
+	user, err := s.repo.GetUserByID(
+		userID,
+		ctx,
+	)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, fiber.NewError(
@@ -30,6 +33,12 @@ func (s *Service) Profile(userID uint64, ctx fiber.Ctx) (*UserProfile, error) {
 			)
 		}
 
+		s.logger.Error(
+			"failed to get user profile",
+			"user_id", userID,
+			"error", err,
+		)
+
 		return nil, fiber.NewError(
 			fiber.StatusInternalServerError,
 			"failed to get user profile",
@@ -37,4 +46,47 @@ func (s *Service) Profile(userID uint64, ctx fiber.Ctx) (*UserProfile, error) {
 	}
 
 	return user, nil
+}
+
+func (s *Service) EditUser(userID uint64, userEdit UserEdit, ctx fiber.Ctx) (*UserProfile, error) {
+	user, err := s.repo.EditUser(
+		userID,
+		userEdit,
+		ctx,
+	)
+	if err != nil {
+		s.logger.Error(
+			"failed to edit user",
+			"user_id", userID,
+			"error", err,
+		)
+
+		return nil, fiber.NewError(
+			fiber.StatusInternalServerError,
+			"failed to update user profile",
+		)
+	}
+
+	return user, nil
+}
+
+func (s *Service) UpdateAvatar(userID uint64, avatarPath string, ctx fiber.Ctx) error {
+	if err := s.repo.UpdateAvatar(
+		userID,
+		avatarPath,
+		ctx,
+	); err != nil {
+		s.logger.Error(
+			"failed to update avatar",
+			"user_id", userID,
+			"error", err,
+		)
+
+		return fiber.NewError(
+			fiber.StatusInternalServerError,
+			"failed to update avatar",
+		)
+	}
+
+	return nil
 }
