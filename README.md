@@ -27,6 +27,7 @@ Backend chat API berbasis Go (Fiber) dengan autentikasi JWT (cookie), fitur tema
 
 ```text
 chat-go/
+├── .github/workflows/   # CI (GitHub Actions)
 ├── cmd/server/          # entrypoint aplikasi
 ├── config/              # config.json (lokal) & config.example.json
 ├── docs/                # swagger generated
@@ -166,7 +167,7 @@ Base path: `/api/v1`
 ## Testing
 
 ```bash
-go test ./test/ -v
+go test ./... -count=1 -race
 ```
 
 Cakupan unit test saat ini:
@@ -178,6 +179,16 @@ Cakupan unit test saat ini:
 - ambil user ID dari cookie token
 - load config
 - middleware `CheckAuth`
+
+## CI
+
+GitHub Actions (`.github/workflows/ci.yml`) jalan otomatis di setiap push/PR ke `main`:
+
+1. Setup Go (versi dari `go.mod`)
+2. `go mod download` + `go mod verify`
+3. `go vet ./...`
+4. `go test ./... -race`
+5. `go build ./cmd/server`
 
 ## Development notes
 
