@@ -17,6 +17,60 @@ definitions:
       username:
         type: string
     type: object
+  chat.ErrorResponse:
+    properties:
+      message:
+        type: string
+      status:
+        type: integer
+    type: object
+  friends.AddFriendRequest:
+    properties:
+      name:
+        type: string
+    type: object
+  friends.FriendDto:
+    properties:
+      conversation_id:
+        type: integer
+      display_name:
+        type: string
+      email:
+        type: string
+      id:
+        type: integer
+      username:
+        type: string
+    type: object
+  friends.FriendRequestDto:
+    properties:
+      id:
+        type: integer
+      receiver_id:
+        type: integer
+      sender_id:
+        type: integer
+      status:
+        type: string
+    type: object
+  friends.FriendsResponse:
+    properties:
+      friends:
+        items:
+          $ref: '#/definitions/friends.FriendDto'
+        type: array
+    type: object
+  users.UserProfile:
+    properties:
+      display_name:
+        type: string
+      email:
+        type: string
+      id:
+        type: integer
+      username:
+        type: string
+    type: object
 info:
   contact: {}
 paths:
@@ -60,6 +114,27 @@ paths:
       summary: Login user
       tags:
       - Auth
+  /api/v1/auth/logout:
+    post:
+      description: Clear the authentication cookie and log out the current user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Logout user
+      tags:
+      - Auth
   /api/v1/auth/register:
     post:
       consumes:
@@ -88,4 +163,217 @@ paths:
       summary: Register user
       tags:
       - Auth
+  /api/v1/chat/{id}:
+    get:
+      description: Open a WebSocket connection and get chat history for a conversation
+      parameters:
+      - description: Conversation ID
+        format: int64
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "101":
+          description: Switching Protocols
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/chat.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/chat.ErrorResponse'
+        "426":
+          description: Upgrade Required
+          schema:
+            $ref: '#/definitions/chat.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/chat.ErrorResponse'
+      summary: Get chat history
+      tags:
+      - Chat
+  /api/v1/friend/add-friend:
+    post:
+      consumes:
+      - application/json
+      description: Send a friend request to a user by username or email. If the target
+        user has already sent a friend request, the request will be accepted instead.
+      parameters:
+      - description: Friend request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/friends.AddFriendRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Friend request sent or accepted
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: User not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Add a friend
+      tags:
+      - friend
+  /api/v1/friend/friends:
+    get:
+      description: Get all friends of the currently authenticated user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/friends.FriendsResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get friends
+      tags:
+      - friend
+  /api/v1/friend/friends-request:
+    get:
+      description: Get all friends of the currently authenticated user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/friends.FriendRequestDto'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get friends request
+      tags:
+      - friend
+  /api/v1/friend/reject-friend/{id}:
+    post:
+      description: Reject a friend request received by the currently authenticated
+        user
+      parameters:
+      - description: Friend request ID
+        format: int64
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Friend request rejected successfully
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid friend request ID
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Friend request not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Reject a friend request
+      tags:
+      - friend
+  /api/v1/users/profile:
+    get:
+      description: Get the profile of the currently authenticated user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/users.UserProfile'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: User not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get current user profile
+      tags:
+      - users
 swagger: "2.0"

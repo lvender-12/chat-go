@@ -13,9 +13,10 @@ type Config struct {
 }
 
 type AppConfig struct {
-	Name string `json:"name"`
-	Host string `json:"host"`
-	Port int    `json:"port"`
+	Name     string `json:"name"`
+	Host     string `json:"host"`
+	Port     int    `json:"port"`
+	LogLevel string `json:"log_level"`
 }
 
 type DatabaseConfig struct {

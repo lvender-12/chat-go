@@ -56,10 +56,7 @@ func (r *Repository) CreateUser(input *UserRegister, ctx fiber.Ctx) error {
 	return nil
 }
 
-func (r *Repository) GetUserByUsernameOrEmail(
-	usernameOrEmail string,
-	ctx fiber.Ctx,
-) (*User, error) {
+func (r *Repository) GetUserByUsernameOrEmail(usernameOrEmail string, ctx fiber.Ctx) (*User, error) {
 	r.logger.Debug(
 		"querying user",
 		"identifier", usernameOrEmail,
