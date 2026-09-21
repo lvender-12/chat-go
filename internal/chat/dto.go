@@ -31,3 +31,12 @@ type ErrorResponse struct {
 type MessageRequest struct {
 	Content string `json:"content"`
 }
+
+type MessageWithID struct {
+	ID      uint64 `json:"ID"`
+	Content string `json:"content"`
+}
+
+type DeleteMessageRequest struct {
+	ID uint64 `json:"id"`
+}

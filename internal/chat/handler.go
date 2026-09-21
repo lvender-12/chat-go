@@ -149,11 +149,7 @@ func (h *Handler) SendMessage(c fiber.Ctx) error {
 		)
 	}
 
-	if err := h.service.SendMessage(
-		userID,
-		conversationID,
-		input.Content,
-	); err != nil {
+	if err := h.service.SendMessage(userID, conversationID, input.Content); err != nil {
 		return err
 	}
 
@@ -185,4 +181,153 @@ func (h *Handler) SendMessage(c fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"message": "message sent",
 	})
+}
+
+// EditMessage godoc
+// @Summary Edit a message
+// @Description Edit an existing message owned by the authenticated user and broadcast the updated chat through WebSocket
+// @Tags Chat
+// @Accept json
+// @Produce json
+// @Param id path uint64 true "Conversation ID"
+// @Param request body MessageWithID true "Message ID and new message content"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} ErrorResponse
+// @Failure 401 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /api/v1/chat/{id} [put]
+func (h *Handler) EditMessage(c fiber.Ctx) error {
+
+	var input MessageWithID
+
+	if err := c.Bind().Body(&input); err != nil {
+		return fiber.NewError(
+			fiber.StatusBadRequest,
+			"invalid request body",
+		)
+	}
+
+	userID, err := utils.GetUserIDFromToken(
+		c,
+		[]byte(h.state.Config.JWT.Secret),
+	)
+	if err != nil {
+		return fiber.NewError(
+			fiber.StatusUnauthorized,
+			err.Error(),
+		)
+	}
+
+	if err = h.service.EditMessage(userID, input.ID, input.Content, c); err != nil {
+		return err
+	}
+
+	conversationID, err := strconv.ParseUint(
+		c.Params("id"),
+		10,
+		64,
+	)
+	if err != nil {
+		return fiber.NewError(
+			fiber.StatusBadRequest,
+			"invalid conversation id",
+		)
+	}
+
+	if err := h.broadcastChatUpdate(conversationID); err != nil {
+		return fiber.NewError(
+			fiber.StatusInternalServerError,
+			err.Error(),
+		)
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "message edited",
+	})
+}
+
+// DeleteMessage godoc
+// @Summary Delete a message
+// @Description Soft delete an existing message owned by the authenticated user and broadcast the updated chat through WebSocket
+// @Tags Chat
+// @Accept json
+// @Produce json
+// @Param id path uint64 true "Conversation ID"
+// @Param request body DeleteMessageRequest true "Message ID"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} ErrorResponse
+// @Failure 401 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /api/v1/chat/{id} [delete]
+func (h *Handler) DeleteMessage(c fiber.Ctx) error {
+
+	var input DeleteMessageRequest
+
+	if err := c.Bind().Body(&input); err != nil {
+		return fiber.NewError(
+			fiber.StatusBadRequest,
+			"invalid request body",
+		)
+	}
+
+	userID, err := utils.GetUserIDFromToken(
+		c,
+		[]byte(h.state.Config.JWT.Secret),
+	)
+	if err != nil {
+		return fiber.NewError(
+			fiber.StatusUnauthorized,
+			err.Error(),
+		)
+	}
+
+	if err = h.service.DeleteMessage(userID, input.ID, c); err != nil {
+		return err
+	}
+
+	conversationID, err := strconv.ParseUint(
+		c.Params("id"),
+		10,
+		64,
+	)
+	if err != nil {
+		return fiber.NewError(
+			fiber.StatusBadRequest,
+			"invalid conversation id",
+		)
+	}
+
+	if err := h.broadcastChatUpdate(conversationID); err != nil {
+		return fiber.NewError(
+			fiber.StatusInternalServerError,
+			err.Error(),
+		)
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "message deleted",
+	})
+}
+
+func (h *Handler) broadcastChatUpdate(conversationID uint64) error {
+	chat, err := h.service.GetChat(conversationID)
+	if err != nil {
+		return err
+	}
+
+	data, err := json.Marshal(WsResponse{
+		Status:  fiber.StatusOK,
+		Message: "message",
+		Data:    chat,
+	})
+	if err != nil {
+		return err
+	}
+
+	h.hub.broadcast <- Broadcast{
+		ConversationID: conversationID,
+		Msg:            data,
+	}
+
+	return nil
 }

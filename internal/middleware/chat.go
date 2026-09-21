@@ -12,9 +12,7 @@ func CheckUserIdOnConversations(c fiber.Ctx, secret string, logger slog.Logger, 
 	conversationID := c.Params("id")
 	var exists bool
 
-	logger.Debug("checking auth")
-
-	if value := c.Cookies("AuthToken"); value == "" {
+	if c.Cookies("AuthToken") == "" {
 		return fiber.NewError(
 			fiber.StatusUnauthorized,
 			"no auth token",
@@ -32,26 +30,46 @@ func CheckUserIdOnConversations(c fiber.Ctx, secret string, logger slog.Logger, 
 		)
 	}
 
-	logger.Info("authenticated", "userID", userID)
 	err = db.QueryRow(`
 		SELECT EXISTS (
 			SELECT 1
 			FROM conversations
 			WHERE id = ?
-			AND (user_one_id = ? OR user_two_id = ?)
+			  AND (user_one_id = ? OR user_two_id = ?)
 		)
 	`, conversationID, userID, userID).Scan(&exists)
+
 	if err != nil {
+		logger.Error(
+			"failed to check conversation membership",
+			"error", err,
+			"conversationID", conversationID,
+			"userID", userID,
+		)
+
 		return fiber.NewError(
-			fiber.StatusUnauthorized,
-			err.Error(),
+			fiber.StatusInternalServerError,
+			"failed to check conversation access",
 		)
 	}
 
+	logger.Info(
+		"conversation membership result",
+		"conversationID", conversationID,
+		"userID", userID,
+		"exists", exists,
+	)
+
 	if !exists {
+		logger.Warn(
+			"user is not a member of conversation",
+			"conversationID", conversationID,
+			"userID", userID,
+		)
+
 		return fiber.NewError(
-			fiber.StatusUnauthorized,
-			"user not found in conversation",
+			fiber.StatusForbidden,
+			"user is not a member of this conversation",
 		)
 	}
 

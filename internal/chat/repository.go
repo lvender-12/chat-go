@@ -3,6 +3,8 @@ package chat
 import (
 	"database/sql"
 	"log/slog"
+
+	"github.com/gofiber/fiber/v3"
 )
 
 type Repository struct {
@@ -79,4 +81,54 @@ func (r *Repository) SendMessage(idUser uint64, idConversation uint64, content s
 	`, idUser, idConversation, content)
 
 	return err
+}
+
+func (r *Repository) EditMessage(idUser uint64, idMessage uint64, content string, ctx fiber.Ctx) error {
+	result, err := r.db.ExecContext(
+		ctx,
+		`UPDATE messages
+		 SET content = ?
+		 WHERE id = ? AND sender_id = ?`,
+		content,
+		idMessage,
+		idUser,
+	)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return sql.ErrNoRows
+	}
+
+	return nil
+}
+
+func (r *Repository) DeleteMessage(idUser uint64, idMessage uint64, ctx fiber.Ctx) error {
+	result, err := r.db.ExecContext(
+		ctx,
+		`UPDATE messages
+			SET deleted_at = CURRENT_TIMESTAMP,
+				content = NULL
+		WHERE id = ?  AND sender_id = ?;`, idMessage, idUser)
+
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return sql.ErrNoRows
+	}
+
+	return nil
 }
