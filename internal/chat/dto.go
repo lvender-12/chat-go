@@ -17,17 +17,6 @@ type Messages struct {
 	DeletedAt   *time.Time `json:"deleted_at,omitempty"`
 }
 
-type WsResponse struct {
-	Status  int         `json:"status"`
-	Message string      `json:"message"`
-	Data    interface{} `json:"data,omitempty"`
-}
-
-type ErrorResponse struct {
-	Status  int    `json:"status"`
-	Message string `json:"message"`
-}
-
 type MessageRequest struct {
 	Content string `json:"content"`
 }

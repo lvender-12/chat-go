@@ -30,11 +30,11 @@ func NewHandler(service *Service, state *app.State, logger *slog.Logger) *Handle
 // @Accept json
 // @Produce json
 // @Param request body AddFriendRequest true "Friend request"
-// @Success 200 {object} map[string]string "Friend request sent or accepted"
-// @Failure 400 {object} map[string]string "Bad request"
-// @Failure 401 {object} map[string]string "Unauthorized"
-// @Failure 404 {object} map[string]string "User not found"
-// @Failure 500 {object} map[string]string "Internal server error"
+// @Success 200 {object} app.Response
+// @Failure 400 {object} app.Response
+// @Failure 401 {object} app.Response
+// @Failure 404 {object} app.Response
+// @Failure 500 {object} app.Response
 // @Router /api/v1/friend/add-friend [post]
 func (h *Handler) AddFriend(c fiber.Ctx) error {
 	var input AddFriendRequest
@@ -95,10 +95,12 @@ func (h *Handler) AddFriend(c fiber.Ctx) error {
 		"identifier", input.Name,
 	)
 
-	c.Set(fiber.HeaderContentType, fiber.MIMEApplicationJSON)
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"message": message,
-	})
+	return app.JSON(
+		c,
+		fiber.StatusOK,
+		message,
+		nil,
+	)
 }
 
 // GetFriends
@@ -106,9 +108,9 @@ func (h *Handler) AddFriend(c fiber.Ctx) error {
 // @Description Get all friends of the currently authenticated user
 // @Tags friend
 // @Produce json
-// @Success 200 {object} FriendsResponse
-// @Failure 401 {object} map[string]string "Unauthorized"
-// @Failure 500 {object} map[string]string "Internal server error"
+// @Success 200 {object} app.Response
+// @Failure 401 {object} app.Response
+// @Failure 500 {object} app.Response
 // @Router /api/v1/friend/friends [get]
 func (h *Handler) GetFriends(c fiber.Ctx) error {
 	h.logger.Debug("Hit Get Friends Handler")
@@ -128,17 +130,23 @@ func (h *Handler) GetFriends(c fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	return c.Status(fiber.StatusOK).JSON(friends)
+
+	return app.JSON(
+		c,
+		fiber.StatusOK,
+		"success",
+		friends,
+	)
 }
 
-// GetFriends
+// GetRequests
 // @Summary Get friends request
 // @Description Get all friends of the currently authenticated user
 // @Tags friend
 // @Produce json
-// @Success 200 {object} []FriendRequestDto
-// @Failure 401 {object} map[string]string "Unauthorized"
-// @Failure 500 {object} map[string]string "Internal server error"
+// @Success 200 {object} app.Response
+// @Failure 401 {object} app.Response
+// @Failure 500 {object} app.Response
 // @Router /api/v1/friend/friends-request [get]
 func (h *Handler) GetRequests(c fiber.Ctx) error {
 	h.logger.Debug("Hit Get Friends Handler")
@@ -158,7 +166,13 @@ func (h *Handler) GetRequests(c fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	return c.Status(fiber.StatusOK).JSON(requests)
+
+	return app.JSON(
+		c,
+		fiber.StatusOK,
+		"success",
+		requests,
+	)
 }
 
 // RejectRequest
@@ -167,11 +181,11 @@ func (h *Handler) GetRequests(c fiber.Ctx) error {
 // @Tags friend
 // @Produce json
 // @Param id path uint64 true "Friend request ID"
-// @Success 200 {object} map[string]string "Friend request rejected successfully"
-// @Failure 400 {object} map[string]string "Invalid friend request ID"
-// @Failure 401 {object} map[string]string "Unauthorized"
-// @Failure 404 {object} map[string]string "Friend request not found"
-// @Failure 500 {object} map[string]string "Internal server error"
+// @Success 200 {object} app.Response
+// @Failure 400 {object} app.Response
+// @Failure 401 {object} app.Response
+// @Failure 404 {object} app.Response
+// @Failure 500 {object} app.Response
 // @Router /api/v1/friend/reject-friend/{id} [post]
 func (h *Handler) RejectRequest(c fiber.Ctx) error {
 	h.logger.Debug("hit reject request handler")
@@ -205,7 +219,10 @@ func (h *Handler) RejectRequest(c fiber.Ctx) error {
 		return err
 	}
 
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"message": "request rejected successfully",
-	})
+	return app.JSON(
+		c,
+		fiber.StatusOK,
+		"request rejected successfully",
+		nil,
+	)
 }

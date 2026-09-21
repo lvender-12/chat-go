@@ -29,8 +29,8 @@ func NewHandler(service *Service, state *app.State, logger *slog.Logger) *Handle
 // @Accept json
 // @Produce json
 // @Param body body UserRegister true "User Register"
-// @Success 200 {string} string
-// @Failure 400 {object} map[string]string
+// @Success 201 {object} app.Response
+// @Failure 400 {object} app.Response
 // @Router /api/v1/auth/register [post]
 func (h *Handler) Register(c fiber.Ctx) error {
 	var input UserRegister
@@ -68,11 +68,12 @@ func (h *Handler) Register(c fiber.Ctx) error {
 		"email", input.Email,
 	)
 
-	c.Set(fiber.HeaderContentType, fiber.MIMEApplicationJSON)
-	c.Status(fiber.StatusCreated)
-	return c.JSON(fiber.Map{
-		"message": "Registration handled successfully",
-	})
+	return app.JSON(
+		c,
+		fiber.StatusCreated,
+		"Registration handled successfully",
+		nil,
+	)
 }
 
 // Login
@@ -82,10 +83,10 @@ func (h *Handler) Register(c fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param body body UserLogin true "Login credentials"
-// @Success 200 {string} string "Login successful"
-// @Failure 400 {object} map[string]string "Invalid request body"
-// @Failure 401 {object} map[string]string "Invalid username or password"
-// @Failure 500 {object} map[string]string "Internal server error"
+// @Success 200 {object} app.Response
+// @Failure 400 {object} app.Response
+// @Failure 401 {object} app.Response
+// @Failure 500 {object} app.Response
 // @Router /api/v1/auth/login [post]
 func (h *Handler) Login(c fiber.Ctx) error {
 	var input UserLogin
@@ -158,21 +159,22 @@ func (h *Handler) Login(c fiber.Ctx) error {
 		"username", user.Username,
 	)
 
-	c.Set(fiber.HeaderContentType, fiber.MIMEApplicationJSON)
-	c.Status(fiber.StatusOK)
-	return c.JSON(fiber.Map{
-		"message": "Auth handled successfully",
-	})
+	return app.JSON(
+		c,
+		fiber.StatusOK,
+		"Auth handled successfully",
+		nil,
+	)
 }
 
-// Logout godoc
-// @Summary      Logout user
-// @Description  Clear the authentication cookie and log out the current user
-// @Tags         Auth
-// @Produce      json
-// @Success      200  {object} map[string]string
-// @Failure      500  {object} map[string]string
-// @Router       /api/v1/auth/logout [post]
+// Logout
+// @Summary Logout user
+// @Description Clear the authentication cookie and log out the current user
+// @Tags Auth
+// @Produce json
+// @Success 200 {object} app.Response
+// @Failure 500 {object} app.Response
+// @Router /api/v1/auth/logout [post]
 func (h *Handler) Logout(c fiber.Ctx) error {
 
 	c.Cookie(&fiber.Cookie{
@@ -186,9 +188,10 @@ func (h *Handler) Logout(c fiber.Ctx) error {
 
 	h.logger.Debug("user logged out successfully")
 
-	c.Set(fiber.HeaderContentType, fiber.MIMEApplicationJSON)
-	c.Status(fiber.StatusOK)
-	return c.JSON(fiber.Map{
-		"message": "Logout handled successfully",
-	})
+	return app.JSON(
+		c,
+		fiber.StatusOK,
+		"Logout handled successfully",
+		nil,
+	)
 }

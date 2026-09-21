@@ -15,7 +15,9 @@ import (
 func main() {
 	var logger *slog.Logger
 
-	Routeapp := fiber.New()
+	Routeapp := fiber.New(fiber.Config{
+		ErrorHandler: app.ErrorHandler,
+	})
 
 	conf, err := config.LoadConfig("config/config.json")
 	if err != nil {

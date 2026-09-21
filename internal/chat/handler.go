@@ -32,23 +32,23 @@ func NewHandler(
 	}
 }
 
-// GetChat godoc
+// GetChat
 // @Summary Get chat history
 // @Description Open a WebSocket connection and get chat history for a conversation
 // @Tags Chat
 // @Param id path uint64 true "Conversation ID"
 // @Success 101 {string} string "Switching Protocols"
-// @Failure 400 {object} ErrorResponse
-// @Failure 401 {object} ErrorResponse
-// @Failure 426 {object} ErrorResponse
-// @Failure 500 {object} ErrorResponse
+// @Failure 400 {object} app.Response
+// @Failure 401 {object} app.Response
+// @Failure 426 {object} app.Response
+// @Failure 500 {object} app.Response
 // @Router /api/v1/chat/{id} [get]
 func (h *Handler) GetChat(ws *websocket.Conn) error {
 	id := ws.Params("id")
 
 	conversationID, err := strconv.ParseUint(id, 10, 64)
 	if err != nil {
-		return ws.WriteJSON(WsResponse{
+		return ws.WriteJSON(app.Response{
 			Status:  fiber.StatusBadRequest,
 			Message: "invalid conversation id",
 		})
@@ -58,7 +58,7 @@ func (h *Handler) GetChat(ws *websocket.Conn) error {
 
 	userID, ok := userIDValue.(uint64)
 	if !ok {
-		return ws.WriteJSON(WsResponse{
+		return ws.WriteJSON(app.Response{
 			Status:  fiber.StatusUnauthorized,
 			Message: "unauthorized",
 		})
@@ -66,13 +66,13 @@ func (h *Handler) GetChat(ws *websocket.Conn) error {
 
 	chat, err := h.service.GetChat(conversationID)
 	if err != nil {
-		return ws.WriteJSON(WsResponse{
+		return ws.WriteJSON(app.Response{
 			Status:  fiber.StatusInternalServerError,
 			Message: err.Error(),
 		})
 	}
 
-	data, err := json.Marshal(WsResponse{
+	data, err := json.Marshal(app.Response{
 		Status:  fiber.StatusOK,
 		Message: "success",
 		Data:    chat,
@@ -103,7 +103,7 @@ func (h *Handler) GetChat(ws *websocket.Conn) error {
 	return nil
 }
 
-// SendMessage godoc
+// SendMessage
 // @Summary Send a message
 // @Description Send a message to a conversation
 // @Tags Chat
@@ -111,10 +111,10 @@ func (h *Handler) GetChat(ws *websocket.Conn) error {
 // @Produce json
 // @Param id path uint64 true "Conversation ID"
 // @Param request body MessageRequest true "Message content"
-// @Success 200 {object} map[string]string
-// @Failure 400 {object} ErrorResponse
-// @Failure 401 {object} ErrorResponse
-// @Failure 500 {object} ErrorResponse
+// @Success 200 {object} app.Response
+// @Failure 400 {object} app.Response
+// @Failure 401 {object} app.Response
+// @Failure 500 {object} app.Response
 // @Router /api/v1/chat/{id} [post]
 func (h *Handler) SendMessage(c fiber.Ctx) error {
 	var input MessageRequest
@@ -161,7 +161,7 @@ func (h *Handler) SendMessage(c fiber.Ctx) error {
 		)
 	}
 
-	data, err := json.Marshal(WsResponse{
+	data, err := json.Marshal(app.Response{
 		Status:  fiber.StatusOK,
 		Message: "message",
 		Data:    chat,
@@ -178,12 +178,15 @@ func (h *Handler) SendMessage(c fiber.Ctx) error {
 		Msg:            data,
 	}
 
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"message": "message sent",
-	})
+	return app.JSON(
+		c,
+		fiber.StatusOK,
+		"message sent",
+		nil,
+	)
 }
 
-// EditMessage godoc
+// EditMessage
 // @Summary Edit a message
 // @Description Edit an existing message owned by the authenticated user and broadcast the updated chat through WebSocket
 // @Tags Chat
@@ -191,10 +194,10 @@ func (h *Handler) SendMessage(c fiber.Ctx) error {
 // @Produce json
 // @Param id path uint64 true "Conversation ID"
 // @Param request body MessageWithID true "Message ID and new message content"
-// @Success 200 {object} map[string]string
-// @Failure 400 {object} ErrorResponse
-// @Failure 401 {object} ErrorResponse
-// @Failure 500 {object} ErrorResponse
+// @Success 200 {object} app.Response
+// @Failure 400 {object} app.Response
+// @Failure 401 {object} app.Response
+// @Failure 500 {object} app.Response
 // @Router /api/v1/chat/{id} [put]
 func (h *Handler) EditMessage(c fiber.Ctx) error {
 
@@ -241,12 +244,15 @@ func (h *Handler) EditMessage(c fiber.Ctx) error {
 		)
 	}
 
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"message": "message edited",
-	})
+	return app.JSON(
+		c,
+		fiber.StatusOK,
+		"message edited",
+		nil,
+	)
 }
 
-// DeleteMessage godoc
+// DeleteMessage
 // @Summary Delete a message
 // @Description Soft delete an existing message owned by the authenticated user and broadcast the updated chat through WebSocket
 // @Tags Chat
@@ -254,10 +260,10 @@ func (h *Handler) EditMessage(c fiber.Ctx) error {
 // @Produce json
 // @Param id path uint64 true "Conversation ID"
 // @Param request body DeleteMessageRequest true "Message ID"
-// @Success 200 {object} map[string]string
-// @Failure 400 {object} ErrorResponse
-// @Failure 401 {object} ErrorResponse
-// @Failure 500 {object} ErrorResponse
+// @Success 200 {object} app.Response
+// @Failure 400 {object} app.Response
+// @Failure 401 {object} app.Response
+// @Failure 500 {object} app.Response
 // @Router /api/v1/chat/{id} [delete]
 func (h *Handler) DeleteMessage(c fiber.Ctx) error {
 
@@ -304,9 +310,12 @@ func (h *Handler) DeleteMessage(c fiber.Ctx) error {
 		)
 	}
 
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"message": "message deleted",
-	})
+	return app.JSON(
+		c,
+		fiber.StatusOK,
+		"message deleted",
+		nil,
+	)
 }
 
 func (h *Handler) broadcastChatUpdate(conversationID uint64) error {
@@ -315,7 +324,7 @@ func (h *Handler) broadcastChatUpdate(conversationID uint64) error {
 		return err
 	}
 
-	data, err := json.Marshal(WsResponse{
+	data, err := json.Marshal(app.Response{
 		Status:  fiber.StatusOK,
 		Message: "message",
 		Data:    chat,

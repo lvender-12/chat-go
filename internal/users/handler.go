@@ -27,10 +27,10 @@ func NewHandler(service *Service, state *app.State, logger *slog.Logger) *Handle
 // @Description Get the profile of the currently authenticated user
 // @Tags users
 // @Produce json
-// @Success 200 {object} UserProfile
-// @Failure 401 {object} map[string]string "Unauthorized"
-// @Failure 404 {object} map[string]string "User not found"
-// @Failure 500 {object} map[string]string "Internal server error"
+// @Success 200 {object} app.Response
+// @Failure 401 {object} app.Response
+// @Failure 404 {object} app.Response
+// @Failure 500 {object} app.Response
 // @Router /api/v1/users/profile [get]
 func (h *Handler) Profile(c fiber.Ctx) error {
 	h.logger.Debug("profile request received")
@@ -52,7 +52,10 @@ func (h *Handler) Profile(c fiber.Ctx) error {
 		return err
 	}
 
-	c.Set(fiber.HeaderContentType, fiber.MIMEApplicationJSON)
-	c.Status(fiber.StatusOK)
-	return c.JSON(user)
+	return app.JSON(
+		c,
+		fiber.StatusOK,
+		"success",
+		user,
+	)
 }
