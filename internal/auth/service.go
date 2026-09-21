@@ -39,6 +39,13 @@ func (s *Service) Register(input *UserRegister, ctx fiber.Ctx) error {
 		)
 	}
 
+	if utils.ValidateEmail(input.Email) {
+		return fiber.NewError(
+			fiber.StatusBadRequest,
+			"email format not invalid",
+		)
+	}
+
 	if input.Password == "" {
 		return fiber.NewError(
 			fiber.StatusBadRequest,
