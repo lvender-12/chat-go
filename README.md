@@ -5,7 +5,7 @@ Backend chat API berbasis Go (Fiber) dengan autentikasi JWT (cookie), fitur tema
 ## Fitur
 
 - Auth: register, login, logout (JWT di cookie `AuthToken`)
-- Users: ambil profil user yang sedang login
+- Users: ambil/edit profil, upload avatar
 - Friends: kirim/terima/tolak friend request, daftar teman
 - Chat: riwayat chat via WebSocket, kirim/edit/hapus pesan (broadcast realtime)
 - Response API seragam (`status`, `message`, `data`)
@@ -34,7 +34,7 @@ chat-go/
 ├── internal/
 │   ├── app/             # State, Response, ErrorHandler
 │   ├── auth/            # register / login / logout
-│   ├── users/           # profile
+│   ├── users/           # profile, edit profile, upload avatar
 │   ├── friends/         # friend requests & list
 │   ├── chat/            # websocket hub + messaging
 │   ├── middleware/      # auth & conversation access
@@ -167,6 +167,8 @@ Base path: `/api/v1`
 | Method | Path | Auth | Keterangan |
 |--------|------|------|------------|
 | GET | `/users/profile` | Cookie | Profil user login |
+| PATCH | `/users/profile` | Cookie | Edit profil (field opsional: `username`, `email`, `display_name`) |
+| POST | `/users/profile/avatar` | Cookie | Upload avatar (`multipart/form-data`, field `avatar`, max 5 MB) |
 
 ### Friends
 
